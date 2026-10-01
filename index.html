@@ -1,115 +1,1097 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Arpeggio Tool</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#090d16">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23141c2c'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23f0c14b'/%3E%3C/svg%3E">
+<meta name="description" content="Chords in a key, with the open shapes you know, capo shortcuts, and power chords.">
+<title>Chords in a key</title>
 <style>
-:root{--bg:#080b12;--panel:#121826;--line:#28334a;--text:#f5f7ff;--muted:#aab4c8;--accent:#facc15;--pink:#fb7185;--blue:#223453;--green:#86efac}
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at top,#172033 0,#080b12 55%);color:var(--text);padding:8px}.app{max-width:1180px;margin:0 auto;padding-bottom:18px}.mainGrid{display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:10px;align-items:start}.spanAll{grid-column:1/-1}@media (max-width:850px){.mainGrid{display:block}}h1{font-size:1rem;margin:4px 0 2px}.sub{font-size:.72rem;color:var(--muted);margin-bottom:7px}.card{background:rgba(18,24,38,.94);border:1px solid rgba(255,255,255,.08);border-radius:15px;padding:9px;margin-bottom:8px}.modeSwitch,.toggles{display:grid;grid-template-columns:1fr 1fr;gap:7px}.controls{display:grid;grid-template-columns:.62fr 1.38fr;gap:7px;margin-top:7px}.full{grid-column:1/-1}label{display:block;font-size:.62rem;color:var(--muted);margin:0 0 3px 2px}select,button{width:100%;border:1px solid var(--line);background:#0b101b;color:var(--text);border-radius:11px;padding:7px 8px;font-size:.82rem}button.active{border-color:#60a5fa;background:#10233d}button.primary{border-color:var(--accent);background:#221d0a}.selected{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px}.big{font-size:1.1rem;font-weight:950}.big span{color:var(--accent)}.notes{font-size:.78rem;color:var(--muted);margin-top:1px}.badge{font-size:.68rem;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 7px}.chips{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.chip{border:1px solid var(--line);background:#0b101b;border-radius:10px;padding:5px 2px;text-align:center;cursor:pointer}.chip.active{border-color:var(--accent);background:#221d0a}.chip .deg{font-size:.55rem;color:var(--muted)}.chip .name{font-size:.82rem;font-weight:900}.chip .qual{font-size:.55rem;color:var(--muted)}.fretCard{padding:7px}.zoomRow{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;margin-bottom:6px;font-size:.62rem;color:var(--muted)}input[type=range]{width:100%}.fretScroller{overflow-x:auto;-webkit-overflow-scrolling:touch}.fretInner{min-width:100%}.fretNums,.string{display:grid;grid-template-columns:34px repeat(var(--fret-count),1fr);width:100%}.fretNums{font-size:.55rem;color:var(--muted);text-align:center;padding:0 0 3px}.fretboard{width:100%;border:1px solid var(--line);border-radius:13px;overflow:hidden;background:#0b101b}.string{height:34px;border-bottom:1px solid rgba(255,255,255,.06)}.string:last-child{border-bottom:0}.slabel{position:relative;display:flex;align-items:center;justify-content:center;background:linear-gradient(90deg,rgba(202,167,96,.28),#070b12);color:var(--muted);font-weight:800;border-right:4px solid #caa760;font-size:.65rem;min-width:0}.slabel .stringText{position:absolute;left:3px;top:2px;font-size:.48rem;color:#d6bd7a;text-transform:uppercase;letter-spacing:.03em}.slabel .note{box-shadow:0 0 0 2px rgba(202,167,96,.35)}.fret{position:relative;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(255,255,255,.09);min-width:0}.fret::after{content:"";position:absolute;left:0;right:0;top:50%;height:2px;background:rgba(255,255,255,.16)}.fret.openFret{background:linear-gradient(90deg,rgba(202,167,96,.28),rgba(255,255,255,.035));border-right:3px solid #caa760}.fret.openFret::before{content:"open";position:absolute;top:2px;font-size:.44rem;letter-spacing:.03em;color:#d6bd7a;opacity:.9;text-transform:uppercase}.fret.openFret .note{box-shadow:0 0 0 2px rgba(202,167,96,.35)}.note{position:relative;z-index:1;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.56rem;font-weight:950;color:transparent}.note.scale{background:var(--blue);color:#cfe3ff}.note.arp{background:var(--accent);color:#1b1300}.note.root{background:var(--pink);color:white}.note.both{outline:2px solid rgba(255,255,255,.28)}.legend{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}.legend div{font-size:.6rem;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 6px;background:#0b101b}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:3px}.lesson{font-size:.74rem;color:#dbeafe;line-height:1.25}.lesson b{color:white}.hidden{display:none!important}.shapeCard{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.shapeTitle{font-size:1.15rem;font-weight:950}.shapeTitle span{color:var(--green)}.shapeSub{font-size:.76rem;color:var(--muted);line-height:1.25;margin-top:2px}.diagram{width:124px;height:154px;background:#0b101b;border:1px solid var(--line);border-radius:12px;padding:12px 10px 8px;position:relative}.vline,.hline{position:absolute;background:rgba(255,255,255,.25)}.vline{top:29px;bottom:28px;width:1px}.hline{left:17px;right:17px;height:1px}.finger{position:absolute;width:18px;height:18px;border-radius:50%;background:var(--accent);color:#1b1300;display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:900;transform:translate(-50%,-50%)}.barre{position:absolute;height:18px;border-radius:999px;background:var(--pink);color:white;display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:900;transform:translateY(-50%)}.openRow{position:absolute;top:6px;left:17px;right:17px;display:grid;grid-template-columns:repeat(6,1fr);font-size:.6rem;color:var(--muted);text-align:center}.stringNames{position:absolute;bottom:7px;left:17px;right:17px;display:grid;grid-template-columns:repeat(6,1fr);font-size:.54rem;color:var(--muted);text-align:center}.fretLabel{position:absolute;left:6px;top:31px;font-size:.6rem;color:var(--muted)}footer{text-align:center;color:var(--muted);font-size:.74rem;padding:14px 0 6px}.mainGrid .card{height:auto}@media (min-width:851px){.chips{grid-template-columns:repeat(7,minmax(70px,1fr))}.string{height:40px}.note{width:28px;height:28px;font-size:.64rem}.card{padding:11px}.fretCard{position:sticky;top:8px}}@media (max-width:520px){.shapeCard{grid-template-columns:1fr 124px}.string{height:31px}.note{width:21px;height:21px;font-size:.5rem}select,button{font-size:.78rem;padding:6px 7px}.card{padding:7px;margin-bottom:6px}h1{display:none}.sub{display:none}}
+:root {
+  --bg: #090d16;
+  --card: #141c2c;
+  --line: rgba(255, 255, 255, 0.09);
+  --line-strong: #314056;
+  --text: #f4f7fb;
+  --soft: #c9d2e3;
+  --muted: #93a0b8;
+  --gold: #f0c14b;
+  --gold-ink: #1c1503;
+  --gold-dim: #2a2410;
+  --green: #7ddea8;
+  --green-dim: #13261c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background:
+    radial-gradient(900px 420px at 50% -80px, #1c2b4a 0%, transparent 60%),
+    var(--bg);
+  color: var(--text);
+  line-height: 1.4;
+  padding: 16px 14px calc(24px + env(safe-area-inset-bottom));
+}
+button, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.app { max-width: 40rem; margin: 0 auto; }
+.eyebrow {
+  margin: 2px 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.controls { display: grid; gap: 12px; }
+.field label, .field-label {
+  display: block;
+  margin: 0 0 6px 2px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+select {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 36px 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  background-color: #0e1524;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2393a0b8' d='M1 1.2 6 6.5 11 1.2'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  appearance: none;
+  font-size: 16px;
+}
+.seg {
+  display: flex;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+}
+.seg button {
+  flex: 1;
+  min-height: 48px;
+  border: 0;
+  border-radius: 0;
+  background: #0e1524;
+  color: var(--soft);
+}
+.seg button + button { border-left: 1px solid var(--line-strong); }
+.seg button[aria-pressed="true"] {
+  background: var(--gold-dim);
+  color: var(--gold);
+}
+.capo-field { margin-top: 12px; }
+.capo {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.capo::-webkit-scrollbar { display: none; }
+.capo button {
+  flex: 0 0 auto;
+  min-width: 52px;
+  min-height: 48px;
+  padding: 6px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  background: #0e1524;
+  color: var(--text);
+  line-height: 1.05;
+}
+.capo button b { font-weight: 700; font-size: 15px; }
+.capo button small {
+  display: block;
+  min-height: 11px;
+  margin-top: 2px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.capo button[aria-pressed="true"] {
+  background: var(--gold-dim);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+h1 {
+  margin: 18px 0 10px;
+  font-size: 2rem;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+}
+.chart {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.chart button {
+  appearance: none;
+  margin: 0;
+  padding: 10px 1px 11px;
+  border: 0;
+  border-top: 3px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  min-height: 78px;
+}
+.chart button + button { border-left: 1px solid var(--line); }
+.chart button.open { border-top-color: var(--green); }
+.chart button.power { border-top-color: var(--gold); }
+.chart .roman {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+.chart .sym {
+  display: block;
+  margin-top: 3px;
+  font-size: clamp(12px, 3.5vw, 18px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.chart .how {
+  display: block;
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.chart button.open .sym,
+.chart button.open .how { color: var(--green); }
+.chart button.skip .sym,
+.chart button.skip .how { color: var(--muted); }
+.chart button:hover { background: rgba(255, 255, 255, 0.03); }
+.legend {
+  margin: 8px 2px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.banner {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  border-left-width: 3px;
+}
+.banner.good { border-left-color: var(--green); }
+.banner.tip { border-left-color: var(--gold); }
+.banner p { margin: 0; color: var(--soft); font-size: 15px; }
+.banner p + p { margin-top: 8px; }
+.apply {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 12px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--gold);
+  color: var(--gold-ink);
+  font-weight: 800;
+}
+h2 {
+  margin: 26px 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.cards { display: flex; flex-direction: column; gap: 8px; }
+.chord {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  gap: 8px 10px;
+  align-items: center;
+  scroll-margin: 16px;
+  padding: 12px 12px 12px 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left-width: 3px;
+  border-radius: 16px;
+}
+.chord.open { border-left-color: var(--green); }
+.chord.power { border-left-color: var(--gold); }
+.chord.skip { border-left-color: #2a3346; }
+.chord .roman {
+  align-self: start;
+  margin-top: 3px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--muted);
+  text-align: center;
+}
+.chord h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.kicker {
+  margin: 0 0 2px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.detail {
+  margin: 3px 0 0;
+  color: var(--soft);
+  font-size: 14.5px;
+  line-height: 1.35;
+}
+.chord.skip h3,
+.chord.skip .detail { color: var(--muted); }
+.diagram { margin: 0; width: 84px; }
+.diagram svg { display: block; width: 100%; height: auto; }
+.diagram figcaption {
+  margin-top: 1px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--green);
+}
+.prose p { margin: 0 0 8px; color: var(--soft); font-size: 15px; }
+.powers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.power-card {
+  padding: 10px 10px 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.power-card.core { border-color: rgba(240, 193, 75, 0.55); }
+.power-card .roman {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted);
+}
+.power-card strong {
+  display: block;
+  margin: 2px 0 4px;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.power-card .where,
+.power-card .alt,
+.power-card .alias {
+  display: block;
+  font-size: 13px;
+  color: var(--soft);
+}
+.power-card .alt,
+.power-card .alias { color: var(--muted); margin-top: 2px; }
+.shapes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+.shape-card {
+  padding: 10px 8px 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  text-align: center;
+}
+.shape-card h3 {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.shape-card .diagram { width: min(140px, 100%); margin: 0 auto; }
+.shape-note {
+  margin: 8px 2px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.lookup {
+  margin-top: 14px;
+  padding: 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+.lookup h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 800;
+}
+.lookup-controls {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+.lookup-controls .seg { flex: 1.2; }
+.lookup-controls .field { flex: 0.8; }
+.lookup p {
+  margin: 12px 0 0;
+  font-size: 15px;
+  color: var(--soft);
+}
+.capo-note { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+footer {
+  margin-top: 28px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+.mute { fill: #93a0b8; font-size: 13px; font-family: ui-sans-serif, system-ui, sans-serif; }
+.open-mark { fill: none; stroke: #7ddea8; stroke-width: 1.6; }
+.dot { fill: #f0c14b; }
+.opt { fill: none; stroke: #f0c14b; stroke-width: 1.6; }
+.num { fill: #1c1503; font-size: 11px; font-weight: 700; font-family: ui-sans-serif, system-ui, sans-serif; }
+.opt-num { fill: #f0c14b; font-size: 10px; font-weight: 700; font-family: ui-sans-serif, system-ui, sans-serif; }
+.nut { fill: #f4f7fb; }
+.fretline { stroke: rgba(255, 255, 255, 0.38); stroke-width: 1; }
+.stringline { stroke: rgba(255, 255, 255, 0.62); }
+@media (min-width: 640px) {
+  body { padding: 28px 20px 40px; }
+  .controls { grid-template-columns: 1fr 220px; align-items: end; }
+  .apply { width: auto; }
+  .diagram { width: 96px; }
+  h1 { font-size: 2.4rem; }
+}
+@media (max-width: 380px) {
+  .powers { grid-template-columns: 1fr 1fr; }
+  .lookup-controls { flex-direction: column; align-items: stretch; }
+}
 </style>
 </head>
 <body>
-<div class="app">
-  <h1>Arpeggio Training Tool</h1><div class="sub">Scales, arpeggios, chords, capo shapes, and movable patterns.</div>
-  <div class="card">
-    <div class="modeSwitch"><button id="leadModeBtn" class="primary">Lead Mode</button><button id="chordModeBtn">Chord Mode</button></div>
+<main class="app">
+  <p class="eyebrow">Chords in a key</p>
+  <section class="panel">
     <div class="controls">
-      <div class="full"><label>Instrument</label><select id="instrumentSelect"><option value="guitar">Guitar</option><option value="bass">Bass</option><option value="ukulele">Ukulele</option></select></div>
-      <div><label>Key</label><select id="keySelect"></select></div>
-      <div><label>Mode</label><select id="modeSelect"></select></div>
-      <div id="leadControls" class="full"><label>Arpeggio</label><select id="arpSelect"></select></div>
-      <div id="patternControls" class="full"><label>Scale view</label><select id="patternSelect"><option value="full">Full board</option><option value="3nps-0">Pattern 1</option><option value="3nps-1">Pattern 2</option><option value="3nps-2">Pattern 3</option><option value="3nps-3">Pattern 4</option><option value="3nps-4">Pattern 5</option><option value="3nps-5">Pattern 6</option><option value="3nps-6">Pattern 7</option></select></div>
-      <div id="capoControls" class="full hidden"><label>Capo</label><select id="capoSelect"></select></div>
+      <div class="field">
+        <label for="keySelect">Key</label>
+        <select id="keySelect"></select>
+      </div>
+      <div class="field">
+        <span class="field-label" id="modeLabel">Major or minor</span>
+        <div class="seg" role="group" aria-labelledby="modeLabel">
+          <button type="button" id="majorBtn">Major</button>
+          <button type="button" id="minorBtn">Minor</button>
+        </div>
+      </div>
     </div>
-    <div class="toggles" id="leadToggles"><button id="scaleBtn" class="active">Scale on</button><button id="namesBtn" class="active">Names on</button></div>
-  </div>
-  <div class="mainGrid">
-  <div id="leadPanel">
-    <div class="card"><div class="selected"><div><div class="big" id="bigChord"></div><div class="notes" id="arpNotes"></div></div><div class="badge" id="degreeBadge"></div></div><div class="legend"><div><span class="dot" style="background:var(--pink)"></span>root</div><div><span class="dot" style="background:var(--accent)"></span>arpeggio</div><div><span class="dot" style="background:var(--blue)"></span>scale</div></div></div>
-    <div class="card fretCard"><div class="zoomRow"><span>Zoom</span><input id="zoomSlider" type="range" min="100" max="190" value="100" step="10"><span id="zoomText">100%</span></div><div class="fretScroller"><div class="fretInner" id="fretInner"><div class="fretNums" id="fretNums"></div><div class="fretboard" id="fretboard"></div></div></div></div>
-  </div>
-  <div id="chordPanel" class="hidden"><div class="card"><div class="shapeCard"><div><div class="shapeTitle" id="shapeTitle"></div><div class="shapeSub" id="shapeSub"></div></div><div id="diagramMount"></div></div></div></div>
-  <div>
-    <div class="card"><label>Chords in this key</label><div class="chips" id="chipGrid"></div></div>
-    <div class="card"><div class="lesson" id="lesson"></div></div>
-  </div>
-  </div>
+    <div class="capo-field">
+      <span class="field-label" id="capoLabel">Capo</span>
+      <div id="capoRow" class="capo" role="group" aria-labelledby="capoLabel"></div>
+    </div>
+  </section>
+
+  <h1 id="heading"></h1>
+  <div id="chart" class="chart"></div>
+  <p id="legend" class="legend"></p>
+  <div id="banner" class="banner" aria-live="polite"></div>
+
+  <h2>How to play them</h2>
+  <div id="cards" class="cards"></div>
+
+  <h2>Power chords</h2>
+  <div id="powerIntro" class="prose"></div>
+  <div id="powerGrid" class="powers"></div>
+  <p id="capoPowerNote" class="capo-note"></p>
+  <div id="shapes" class="shapes"></div>
+  <p class="shape-note">Index finger on the root. Ring finger two frets higher, on the next string. Pinky is optional — it plays the root again, one octave up. Skip every string marked ×.</p>
+
+  <section class="lookup">
+    <h3>What key is this power chord?</h3>
+    <div class="lookup-controls">
+      <div class="seg" role="group" aria-label="Which string the root is on">
+        <button type="button" id="stringE">Low E</button>
+        <button type="button" id="stringA">A string</button>
+      </div>
+      <div class="field">
+        <label for="fretSelect">Fret</label>
+        <select id="fretSelect"></select>
+      </div>
+    </div>
+    <p id="lookupText"></p>
+  </section>
+
   <footer>Created by Astral Studios LLC</footer>
-</div>
+</main>
+<noscript>This page needs JavaScript to list the chords.</noscript>
 <script>
-const NOTES=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"],FLAT={"C#":"Db","D#":"Eb","F#":"Gb","G#":"Ab","A#":"Bb"};
-const INSTRUMENTS={
-  guitar:{label:"Guitar",strings:["E","B","G","D","A","E"],chords:true},
-  bass:{label:"Bass",strings:["G","D","A","E"],chords:false},
-  ukulele:{label:"Ukulele",strings:["A","E","C","G"],chords:true}
+// @theory-start
+const SHARP = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+const NATURAL = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+const KEY_OPTIONS = [
+  [0, "C"],
+  [1, "C# / Db"],
+  [2, "D"],
+  [3, "Eb"],
+  [4, "E"],
+  [5, "F"],
+  [6, "F#"],
+  [7, "G"],
+  [8, "Ab"],
+  [9, "A"],
+  [10, "Bb"],
+  [11, "B"],
+];
+const OPEN_CHORDS = {
+  C:  { frets: [null, 3, 2, 0, 1, 0], fingers: [0, 3, 2, 0, 1, 0] },
+  D:  { frets: [null, null, 0, 2, 3, 2], fingers: [0, 0, 0, 1, 3, 2] },
+  E:  { frets: [0, 2, 2, 1, 0, 0], fingers: [0, 2, 3, 1, 0, 0] },
+  G:  { frets: [3, 2, 0, 0, 0, 3], fingers: [2, 1, 0, 0, 0, 3] },
+  A:  { frets: [null, 0, 2, 2, 2, 0], fingers: [0, 0, 1, 2, 3, 0] },
+  Am: { frets: [null, 0, 2, 2, 1, 0], fingers: [0, 0, 2, 3, 1, 0] },
+  Dm: { frets: [null, null, 0, 2, 3, 1], fingers: [0, 0, 0, 2, 3, 1] },
+  Em: { frets: [0, 2, 2, 0, 0, 0], fingers: [0, 2, 3, 0, 0, 0] },
 };
-let STRINGS=INSTRUMENTS.guitar.strings;
-const modes={"Major / Ionian":{i:[0,2,4,5,7,9,11],q:["maj","min","min","maj","maj","min","dim"]},"Natural Minor / Aeolian":{i:[0,2,3,5,7,8,10],q:["min","dim","maj","min","min","maj","maj"]},"Dorian":{i:[0,2,3,5,7,9,10],q:["min","min","maj","maj","min","dim","maj"]},"Phrygian":{i:[0,1,3,5,7,8,10],q:["min","maj","maj","min","dim","maj","min"]},"Lydian":{i:[0,2,4,6,7,9,11],q:["maj","maj","min","dim","maj","min","min"]},"Mixolydian":{i:[0,2,4,5,7,9,10],q:["maj","min","dim","maj","min","min","maj"]},"Locrian":{i:[0,1,3,5,6,8,10],q:["dim","maj","min","min","maj","maj","min"]}};
-const roman=["I","ii","iii","IV","V","vi","vii°"],longDeg=["1st / I","2nd / ii","3rd / iii","4th / IV","5th / V","6th / vi","7th / vii°"];
-let state={instrument:"guitar",view:"lead",key:"A",mode:"Natural Minor / Aeolian",arp:0,showScale:true,showNames:true,pattern:"full",capo:0,zoom:100};
-const OPEN={"C":{open:["x","","","","o","o"],f:[[5,3,3],[4,2,2],[2,1,1]]},"D":{open:["x","x","o","","",""],f:[[3,2,1],[1,2,2],[2,3,3]]},"E":{open:["o","","","","o","o"],f:[[4,2,2],[3,2,3],[2,1,1]]},"G":{open:["","","o","o","o",""],f:[[6,3,2],[5,2,1],[1,3,3]]},"A":{open:["x","o","","","","o"],f:[[4,2,1],[3,2,2],[2,2,3]]},"Am":{open:["x","o","","","o","o"],f:[[4,2,2],[3,2,3],[2,1,1]]},"Dm":{open:["x","x","o","","",""],f:[[3,2,2],[2,3,3],[1,1,1]]},"Em":{open:["o","","","o","o","o"],f:[[5,2,2],[4,2,3]]}};
-const UKE_OPEN={
-"C":{open:["o","o","o",""],f:[[1,3,3]]},
-"D":{open:["","","","o"],f:[[4,2,1],[3,2,2],[2,2,3]]},
-"E":{open:["","","",""],f:[[4,1,1],[3,4,4],[2,0,0],[1,2,2]]},
-"F":{open:["","o","","o"],f:[[4,2,2],[2,1,1]]},
-"G":{open:["o","","",""],f:[[3,2,1],[2,3,3],[1,2,2]]},
-"A":{open:["","o","","o"],f:[[4,2,2],[3,1,1]]},
-"B":{open:["","","",""],f:[[4,4,3],[3,3,2],[2,2,1],[1,2,1]]},
-"Am":{open:["","o","o","o"],f:[[4,2,2]]},
-"Bm":{open:["","","",""],f:[[4,4,3],[3,2,1],[2,2,1],[1,2,1]]},
-"Cm":{open:["x","","",""],f:[[3,3,1],[2,3,1],[1,3,1]]},
-"Dm":{open:["","o","",""],f:[[4,2,2],[3,2,3],[2,1,1]]},
-"Em":{open:["o","","",""],f:[[3,4,3],[2,3,2],[1,2,1]]},
-"Fm":{open:["","","",""],f:[[4,1,1],[3,0,0],[2,1,2],[1,3,4]]},
-"Gm":{open:["o","","",""],f:[[3,2,2],[2,3,3],[1,1,1]]},
-"Fdim":{open:["","","",""],f:[[4,1,1],[3,2,2],[2,1,3],[1,2,4]]},
-"Bdim":{open:["","","",""],f:[[4,1,1],[3,2,2],[2,1,3],[1,2,4]]}
+const SHAPES = {
+  maj: { 0: "C", 2: "D", 4: "E", 7: "G", 9: "A" },
+  min: { 2: "Dm", 4: "Em", 9: "Am" },
 };
-function idx(n){return NOTES.indexOf(n)}function simple(i){return NOTES[(i+120)%12]}function pretty(i){const n=simple(i);return FLAT[n]?`${n}/${FLAT[n]}`:n}function chordName(r,q){return q==="maj"?r:q==="min"?r+"m":r+"dim"}function chordLong(r,q){return r+" "+(q==="maj"?"Major":q==="min"?"Minor":"Diminished")}function chordInts(q){return q==="maj"?[0,4,7]:q==="min"?[0,3,7]:[0,3,6]}function scale(){const root=idx(state.key);return modes[state.mode].i.map(x=>(root+x)%12)}function chords(){const s=scale(),q=modes[state.mode].q;return s.map((root,i)=>({root,rootName:simple(root),quality:q[i],i}))}function arpNotes(){const c=chords()[state.arp];return chordInts(c.quality).map(x=>(c.root+x)%12)}function shapeActualName(c,capo){return chordName(simple(c.root-capo),c.quality)}
-function setup(){instrumentSelect.value=state.instrument||"guitar";NOTES.forEach(n=>keySelect.add(new Option(pretty(idx(n)),n)));keySelect.value=state.key;Object.keys(modes).forEach(m=>modeSelect.add(new Option(m,m)));modeSelect.value=state.mode;for(let i=0;i<=7;i++)capoSelect.add(new Option(i===0?"No capo":`Capo ${i}`,i));instrumentSelect.onchange=e=>{state.instrument=e.target.value;STRINGS=INSTRUMENTS[state.instrument].strings;render(false)};keySelect.onchange=e=>{state.key=e.target.value;state.arp=0;render(true)};modeSelect.onchange=e=>{state.mode=e.target.value;state.arp=0;render(true)};arpSelect.onchange=e=>{state.arp=Number(e.target.value);render(false)};patternSelect.onchange=e=>{state.pattern=e.target.value;render(false)};capoSelect.onchange=e=>{state.capo=Number(e.target.value);render(false)};zoomSlider.oninput=e=>{state.zoom=Number(e.target.value);zoomText.textContent=state.zoom+"%";applyZoom()};leadModeBtn.onclick=()=>{state.view="lead";render(false)};chordModeBtn.onclick=()=>{state.view="chord";render(false)};scaleBtn.onclick=()=>{state.showScale=!state.showScale;scaleBtn.textContent=state.showScale?"Scale on":"Scale off";scaleBtn.classList.toggle("active",state.showScale);render(false)};namesBtn.onclick=()=>{state.showNames=!state.showNames;namesBtn.textContent=state.showNames?"Names on":"Names off";namesBtn.classList.toggle("active",state.showNames);render(false)};render(true)}
-function render(rebuild){const s=scale(),cs=chords(),c=cs[state.arp],an=arpNotes();leadModeBtn.classList.toggle("primary",state.view==="lead");chordModeBtn.classList.toggle("primary",state.view==="chord");leadPanel.classList.toggle("hidden",state.view!=="lead");chordPanel.classList.toggle("hidden",state.view!=="chord");leadControls.classList.toggle("hidden",state.view!=="lead");patternControls.classList.toggle("hidden",state.view!=="lead");leadToggles.classList.toggle("hidden",state.view!=="lead");capoControls.classList.toggle("hidden",state.view!=="chord");if(rebuild){arpSelect.innerHTML="";cs.forEach((x,i)=>arpSelect.add(new Option(`${longDeg[i]} — ${chordLong(x.rootName,x.quality)} (${chordName(x.rootName,x.quality)})`,i)))}arpSelect.value=state.arp;bigChord.innerHTML=`${chordLong(c.rootName,c.quality)} <span>${chordName(c.rootName,c.quality)}</span>`;document.getElementById("arpNotes").textContent=`Notes: ${an.map(pretty).join(" · ")}`;degreeBadge.textContent=longDeg[state.arp];chipGrid.innerHTML="";cs.forEach((x,i)=>{const el=document.createElement("div");el.className="chip"+(i===state.arp?" active":"");const shape=shapeActualName(x,state.capo);el.innerHTML=state.view==="chord"?`<div class="deg">${i+1} · ${roman[i]}</div><div class="name">${chordName(x.rootName,x.quality)}</div><div class="qual">${state.capo?shape+" shape":"shape"}</div>`:`<div class="deg">${i+1} · ${roman[i]}</div><div class="name">${chordName(x.rootName,x.quality)}</div><div class="qual">${x.quality}</div>`;el.onclick=()=>{state.arp=i;render(false)};chipGrid.appendChild(el)});if(state.view==="lead"){drawFretboard(s,an,c.root);lesson.innerHTML=state.pattern==="full"?`<b>Lead mode:</b> ${INSTRUMENTS[state.instrument].label} tuning. Full board. Change key and everything shifts correctly.`:`<b>Pattern mode:</b> generated from ${state.key} ${state.mode} on ${INSTRUMENTS[state.instrument].label}. Each string shows up to 3 notes from the selected position.`}else{renderChordMode(c);lesson.innerHTML=(state.instrument==="bass"||state.instrument==="ukulele")?`<b>Chord mode:</b> this shows chord tones for ${INSTRUMENTS[state.instrument].label}. Lead Mode maps where to play them.`:`<b>Chord mode:</b> open shapes show when possible. Otherwise V13 falls back to a movable barre chord.`}}
-function getFretWindow(){if(state.pattern==="full")return[0,12];const pat=Number(state.pattern.split("-")[1]);return get3NPSWindow(pat)}
-function get3NPSWindow(pat){const s=scale();const target=s[pat];let candidates=[];for(let f=0;f<=17;f++){if((idx("E")+f)%12===target)candidates.push(f)}let start=candidates.find(f=>f>=0&&f<=12)??candidates[0]??0;if(start>12)start-=12;if(start<0)start+=12;let min=Math.max(0,start-1),max=Math.min(17,start+6);if(max-min<6){max=Math.min(17,min+6)}return[min,max]}
-function notesFor3NPS(open,start,end){const out=[];for(let f=start;f<=Math.min(24,end+5);f++){const n=(idx(open)+f)%12;if(scale().includes(n))out.push(f);if(out.length>=3)break}return out.filter(f=>f>=start&&f<=end)}
-function applyZoom(){if(fretInner)fretInner.style.width=state.zoom+"%"}
-function drawFretboard(s,an,root){const[start,end]=getFretWindow(),count=end-Math.max(1,start)+1,is3=state.pattern!=="full";document.documentElement.style.setProperty("--fret-count",count);const nums=[]; for(let n=Math.max(1,start); n<=end; n++) nums.push(`<div>${n}</div>`); fretNums.innerHTML="<div>open</div>"+nums.join("");fretboard.innerHTML="";STRINGS.forEach(open=>{const row=document.createElement("div");row.className="string";const allowed=is3?notesFor3NPS(open,start,end):null;const oi=idx(open);
-  const openNoteNum=oi%12, openInS=s.includes(openNoteNum)&&(!is3||allowed.includes(0)), openInA=an.includes(openNoteNum)&&(!is3||allowed.includes(0)), openIsR=openNoteNum===root;
-  const label=document.createElement("div"); label.className="slabel"; label.innerHTML=`<span class="stringText">${open}</span>`;
-  const openNote=document.createElement("div"); let openCls="note"; if(state.showScale&&openInS)openCls+=" scale"; if(openInA)openCls+=" arp"; if(openInA&&openIsR)openCls+=" root"; if(state.showScale&&openInS&&openInA)openCls+=" both"; openNote.className=openCls; openNote.textContent=(state.showNames&&(openInA||(state.showScale&&openInS)))?simple(openNoteNum):open; label.appendChild(openNote); row.appendChild(label);
-  for(let f=Math.max(1,start);f<=end;f++){const n=(oi+f)%12,inS=s.includes(n)&&(!is3||allowed.includes(f)),inA=an.includes(n)&&(!is3||allowed.includes(f)),isR=n===root;const cell=document.createElement("div");cell.className="fret";const note=document.createElement("div");let cls="note";if(state.showScale&&inS)cls+=" scale";if(inA)cls+=" arp";if(inA&&isR)cls+=" root";if(state.showScale&&inS&&inA)cls+=" both";note.className=cls;note.textContent=(state.showNames&&(inA||(state.showScale&&inS)))?simple(n):"";cell.appendChild(note);row.appendChild(cell)}fretboard.appendChild(row)});applyZoom()}
-function barreShapeFor(actual){const q=actual.endsWith("dim")?"dim":actual.endsWith("m")?"min":"maj";const root=actual.replace("dim","").replace("m","");let r=idx(root);if(q==="dim")return{type:"dim",root,actual};if(q==="maj"){let eFret=(r-idx("E")+12)%12;if(eFret>0)return{type:"E major barre",base:eFret,actual};let aFret=(r-idx("A")+12)%12;return{type:"A major barre",base:aFret||12,actual}}let eFret=(r-idx("E")+12)%12;if(eFret>0)return{type:"E minor barre",base:eFret,actual};let aFret=(r-idx("A")+12)%12;return{type:"A minor barre",base:aFret||12,actual}}
-function renderChordMode(c){const actual=chordName(c.rootName,c.quality),shape=shapeActualName(c,state.capo),open=OPEN[shape];shapeTitle.innerHTML=`${chordLong(c.rootName,c.quality)} <span>${actual}</span>`;
-if(state.instrument==="bass"){const tones=chordInts(c.quality).map(x=>pretty(c.root+x)).join(" · ");shapeSub.innerHTML=`Bass version: focus on chord tones <b>${tones}</b>. Use Lead Mode to map them across the neck.`;diagramMount.innerHTML=`<div class="diagram"><div class="noShape">Bass chord tones:<br><br><b>${tones}</b></div></div>`;return}
-if(state.instrument==="ukulele"){const uke=UKE_OPEN[actual]||UKE_OPEN[shape];const tones=chordInts(c.quality).map(x=>pretty(c.root+x)).join(" · ");if(uke){shapeSub.innerHTML=state.capo?`Capo ${state.capo}: try this ukulele <b>${shape}</b> shape. It sounds like <b>${actual}</b>.`:`Ukulele shape for <b>${actual}</b>. Chord tones: <b>${tones}</b>.`;diagramMount.innerHTML=makeUkeDiagram(uke);return}shapeSub.innerHTML=`Ukulele chord tones: <b>${tones}</b>. No simple saved shape for this one yet.`;diagramMount.innerHTML=`<div class="diagram"><div class="noShape">Ukulele chord tones:<br><br><b>${tones}</b></div></div>`;return}
-if(open){shapeSub.innerHTML=state.capo?`Capo ${state.capo}: play a <b>${shape}</b> shape. It sounds like <b>${actual}</b>.`:`Open shape for <b>${actual}</b>.`;diagramMount.innerHTML=makeOpenDiagram(open);return}
-const b=barreShapeFor(actual);shapeSub.innerHTML=`Use this <b>${b.type}</b> shape. Barre at fret <b>${b.base||"?"}</b>.`;diagramMount.innerHTML=makeBarreDiagram(b)}
-function makeOpenDiagram(shape){let html=`<div class="diagram"><div class="openRow">${shape.open.map(x=>`<div>${x==="x"?"x":x==="o"?"o":""}</div>`).join("")}</div>`;html+=gridLines();shape.f.forEach(f=>{html+=finger(f[0],f[1],f[2])});html+=`<div class="stringNames"><div>E</div><div>A</div><div>D</div><div>G</div><div>B</div><div>e</div></div></div>`;return html}
-function makeBarreDiagram(b){if(b.type==="dim"){return `<div class="diagram"><div class="noShape">Diminished chords vary.<br><br>Use the notes from Lead Mode or a movable dim7 shape.</div></div>`}let html=`<div class="diagram"><div class="fretLabel">fr ${b.base}</div><div class="openRow"><div></div><div></div><div></div><div></div><div></div><div></div></div>`;html+=gridLines();if(b.type==="E major barre"){html+=barre(6,1,1,6);html+=finger(5,3,3)+finger(4,3,4)+finger(3,2,2)}else if(b.type==="E minor barre"){html+=barre(6,1,1,6);html+=finger(5,3,3)+finger(4,3,4)}else if(b.type==="A major barre"){html+=barre(5,1,1,5);html+=finger(4,3,2)+finger(3,3,3)+finger(2,3,4)}else{html+=barre(5,1,1,5);html+=finger(4,3,3)+finger(3,3,4)+finger(2,2,2)}html+=`<div class="stringNames"><div>E</div><div>A</div><div>D</div><div>G</div><div>B</div><div>e</div></div></div>`;return html}
-function gridLines(){let h="";for(let i=0;i<6;i++){const left=17+(90/5)*i;h+=`<div class="vline" style="left:${left}px"></div>`}for(let i=0;i<5;i++){const top=29+(96/4)*i;h+=`<div class="hline" style="top:${top}px"></div>`}return h}
-function finger(string,fret,num){const left=17+(90/5)*(6-string),top=29+(96/4)*(fret-.5);return `<div class="finger" style="left:${left}px;top:${top}px">${num}</div>`}
-function barre(fromString,toString,fret,num){const left1=17+(90/5)*(6-fromString),left2=17+(90/5)*(6-toString),top=29+(96/4)*(fret-.5),left=Math.min(left1,left2)-9,width=Math.abs(left2-left1)+18;return `<div class="barre" style="left:${left}px;top:${top}px;width:${width}px">${num}</div>`}
+const ROMAN = {
+  major: ["I", "ii", "iii", "IV", "V", "vi", "vii°"],
+  minor: ["i", "ii°", "III", "iv", "v", "VI", "VII"],
+};
+const QUALITY = {
+  major: ["maj", "min", "min", "maj", "maj", "min", "dim"],
+  minor: ["min", "dim", "maj", "min", "min", "maj", "maj"],
+};
+// How much it matters that you can play this degree as an open chord.
+// Major songs sit on I, IV, and V, then vi.
+// Minor guitar songs sit on i and iv, then VI and VII, then III, then v.
+const WEIGHT = {
+  major: [5, 2, 1, 5, 5, 3, 0],
+  minor: [5, 0, 3, 5, 2, 4, 4],
+};
+// A higher capo has to unlock a clearly better set, not just one extra chord.
+const CAPO_SWITCH_MARGIN = 3;
 
-function makeUkeDiagram(shape){
- let html=`<div class="diagram"><div class="openRow" style="grid-template-columns:repeat(4,1fr);left:24px;right:24px">${shape.open.map(x=>`<div>${x==="x"?"x":x==="o"?"o":""}</div>`).join("")}</div>`;
- html+=ukeGridLines();
- shape.f.forEach(f=>{if(f[1]>0)html+=ukeFinger(f[0],f[1],f[2])});
- html+=`<div class="stringNames" style="grid-template-columns:repeat(4,1fr);left:24px;right:24px"><div>G</div><div>C</div><div>E</div><div>A</div></div></div>`;
- return html;
-}
-function ukeGridLines(){
- let h="";
- for(let i=0;i<4;i++){const left=24+(76/3)*i;h+=`<div class="vline" style="left:${left}px"></div>`}
- for(let i=0;i<5;i++){const top=29+(96/4)*i;h+=`<div class="hline" style="top:${top}px;left:24px;right:24px"></div>`}
- return h;
-}
-function ukeFinger(string,fret,num){
- const left=24+(76/3)*(4-string),top=29+(96/4)*(fret-.5);
- return `<div class="finger" style="left:${left}px;top:${top}px">${num}</div>`;
+function defaultFlat(pc, minor) {
+  if (pc === 6) return false;
+  if (pc === 1) return !minor;
+  if (pc === 8) return !minor;
+  if (pc === 10) return true;
+  if (pc === 3) return true;
+  if (minor) return [0, 2, 5, 7].includes(pc);
+  return pc === 5;
 }
 
-setup();
+function spell(letter, pc) {
+  const diff = (pc - NATURAL[letter] + 12) % 12;
+  if (diff === 0) return letter;
+  if (diff === 1) return letter + "#";
+  if (diff === 11) return letter + "b";
+  if (diff === 2) return letter + "##";
+  if (diff === 10) return letter + "bb";
+  return "?";
+}
+
+function qualityWord(quality) {
+  if (quality === "maj") return "major";
+  if (quality === "min") return "minor";
+  return "diminished";
+}
+
+function symbolFor(name, quality) {
+  if (quality === "maj") return name;
+  if (quality === "min") return name + "m";
+  return name + "°";
+}
+
+function buildKey(pc, minor) {
+  const preferFlat = defaultFlat(pc, minor);
+  const tonic = (preferFlat ? FLAT : SHARP)[pc];
+  const mode = minor ? "minor" : "major";
+  const letters = "CDEFGAB";
+  const start = letters.indexOf(tonic[0]);
+  const intervals = minor ? [0, 2, 3, 5, 7, 8, 10] : [0, 2, 4, 5, 7, 9, 11];
+  const chords = intervals.map((interval, index) => {
+    const notePc = (pc + interval) % 12;
+    const letter = letters[(start + index) % 7];
+    const name = spell(letter, notePc);
+    const quality = QUALITY[mode][index];
+    return {
+      pc: notePc,
+      name,
+      quality,
+      index,
+      roman: ROMAN[mode][index],
+      symbol: symbolFor(name, quality),
+      full: name + " " + qualityWord(quality),
+      weight: WEIGHT[mode][index],
+    };
+  });
+  return {
+    pc,
+    minor,
+    tonic,
+    label: tonic + " " + mode,
+    chords,
+    recommendation: recommend(chords),
+  };
+}
+
+function findShape(pc, quality, capo) {
+  const table = SHAPES[quality];
+  if (!table) return null;
+  const shapePc = (pc - capo + 120) % 12;
+  return table[shapePc] || null;
+}
+
+function scoreCapo(chords, capo) {
+  let score = 0;
+  let tonicOpen = false;
+  const open = [];
+  chords.forEach((chord) => {
+    const shape = findShape(chord.pc, chord.quality, capo);
+    if (!shape) return;
+    if (chord.index === 0) tonicOpen = true;
+    score += chord.weight;
+    open.push({ ...chord, shape });
+  });
+  return { capo, score, tonicOpen, open };
+}
+
+function recommend(chords) {
+  let best = null;
+  for (let capo = 0; capo <= 7; capo++) {
+    const result = scoreCapo(chords, capo);
+    if (!result.tonicOpen) continue;
+    if (!best || result.score > best.score + (result.capo > best.capo ? CAPO_SWITCH_MARGIN : 0)) {
+      best = result;
+    }
+  }
+  return best;
+}
+
+function pretendKey(chords, capo, minor) {
+  const shape = findShape(chords[0].pc, chords[0].quality, capo);
+  if (!shape) return null;
+  const root = shape.replace(/m$/, "");
+  return root + (minor ? " minor" : " major");
+}
+
+function soundingList(chords, capo) {
+  return chords.filter((chord) => findShape(chord.pc, chord.quality, capo));
+}
+
+function powerPositions(pc) {
+  const spots = [
+    { string: "E", fret: (pc - 4 + 12) % 12 },
+    { string: "A", fret: (pc - 9 + 12) % 12 },
+  ].map((spot) => ({ ...spot, openRoot: spot.fret === 0 }));
+  const normal = spots.filter((spot) => !spot.openRoot).sort((a, b) => a.fret - b.fret);
+  const alternates = [];
+  if (normal[1] && normal[1].fret <= 7) alternates.push(normal[1]);
+  const open = spots.find((spot) => spot.openRoot);
+  if (open) alternates.push(open);
+  return { primary: normal[0], alternates };
+}
+
+function friendlyPower(chord) {
+  const sharp = SHARP[chord.pc];
+  const flat = FLAT[chord.pc];
+  if (chord.name === sharp || chord.name === flat) return chord.name + "5";
+  return chord.name + "5 (" + sharp + "5)";
+}
+
+function spotPhrase(spot) {
+  if (spot.openRoot) {
+    const root = spot.string === "E" ? "the open low E string" : "the open A string";
+    const next = spot.string === "E" ? "the A string" : "the D string";
+    return root + ", with the fifth on fret 2 of " + next;
+  }
+  const stringName = spot.string === "E" ? "the low E string" : "the A string";
+  return "fret " + spot.fret + " on " + stringName;
+}
+
+function spotShort(spot) {
+  if (spot.openRoot) return spot.string === "E" ? "open low E" : "open A";
+  return "fret " + spot.fret + " · " + (spot.string === "E" ? "low E" : "A string");
+}
+
+function powerSentence(chord, capo) {
+  const spots = powerPositions(chord.pc);
+  const name = friendlyPower(chord);
+  const extra = spots.alternates[0] ? ", or " + spotPhrase(spots.alternates[0]) : "";
+  const body = name + " is " + spotPhrase(spots.primary) + extra;
+  if (capo > 0) return "With the capo off, " + body + ".";
+  return body + ".";
+}
+
+function commonKeyName(pc) {
+  if (pc === 6) return "F#";
+  if (pc === 1) return "C# or Db";
+  if (pc === 8) return "G# or Ab";
+  if (pc === 3) return "Eb";
+  if (pc === 10) return "Bb";
+  const sharp = SHARP[pc];
+  const flat = FLAT[pc];
+  return sharp === flat ? sharp : sharp + " or " + flat;
+}
+
+function withFive(name) {
+  if (name.includes(" or ")) return name.split(" or ").map((part) => part + "5").join(" or ");
+  return name + "5";
+}
+
+function lookupText(stringName, fret) {
+  const openPc = stringName === "E" ? 4 : 9;
+  const pc = (openPc + fret) % 12;
+  const note = commonKeyName(pc);
+  const ivKey = commonKeyName((pc - 5 + 12) % 12);
+  const vKey = commonKeyName((pc - 7 + 12) % 12);
+  const stringLabel = stringName === "E" ? "low E string" : "A string";
+  const place = fret === 0 ? "The open " + stringLabel : "Fret " + fret + " on the " + stringLabel;
+  const fifth = fret === 0
+    ? " The fifth is fret 2 on the " + (stringName === "E" ? "A string" : "D string") + "."
+    : "";
+  return place + " is " + withFive(note) + "." + fifth + " If the song settles on it, you're in " + note + " (major or minor). It's also the IV chord in " + ivKey + " and the V chord in " + vKey + ".";
+}
+
+function joinList(items) {
+  if (items.length <= 1) return items[0] || "";
+  if (items.length === 2) return items[0] + " and " + items[1];
+  return items.slice(0, -1).join(", ") + ", and " + items[items.length - 1];
+}
+
+function situationSentence(model, capo) {
+  const names = soundingList(model.chords, capo).map((chord) => chord.symbol);
+  if (capo === 0) {
+    if (!names.length) return "No capo. None of these are open chords you know.";
+    if (names.length === 1) return "No capo. The open chord you know is " + names[0] + ".";
+    return "No capo. You can play " + joinList(names) + ".";
+  }
+  const via = pretendKey(model.chords, capo, model.minor);
+  if (!names.length) return "Capo " + capo + ". None of these are open chords you know.";
+  if (!via) return "Capo " + capo + ". You can play " + joinList(names) + ".";
+  return "Capo " + capo + ". Play " + via + " shapes. They sound like " + joinList(names) + ".";
+}
+
+function bannerModel(model, capo) {
+  const parts = [situationSentence(model, capo)];
+  const rec = model.recommendation;
+  let action = null;
+  if (rec && rec.capo !== capo) {
+    const via = pretendKey(model.chords, rec.capo, model.minor);
+    const names = rec.open.map((chord) => chord.symbol);
+    parts.push("Easier with capo " + rec.capo + ": play " + via + " shapes. They sound like " + joinList(names) + ".");
+    action = rec.capo;
+  } else if (capo !== 0) {
+    const zero = soundingList(model.chords, 0).map((chord) => chord.symbol);
+    const now = soundingList(model.chords, capo).map((chord) => chord.symbol);
+    if (zero.length && joinList(zero) !== joinList(now)) {
+      const played = zero.length === 1 ? "the open chord is " + zero[0] : "you can play " + joinList(zero);
+      parts.push("With the capo off, " + played + ".");
+    }
+  }
+  return { parts, action };
+}
+// @theory-end
+
+const STORE = "chordkey.v1";
+const state = { pc: 9, minor: true, capo: 0, string: "E", fret: 3 };
+
+const keySelect = document.getElementById("keySelect");
+const majorBtn = document.getElementById("majorBtn");
+const minorBtn = document.getElementById("minorBtn");
+const capoRow = document.getElementById("capoRow");
+const heading = document.getElementById("heading");
+const chart = document.getElementById("chart");
+const legend = document.getElementById("legend");
+const banner = document.getElementById("banner");
+const cards = document.getElementById("cards");
+const powerIntro = document.getElementById("powerIntro");
+const powerGrid = document.getElementById("powerGrid");
+const capoPowerNote = document.getElementById("capoPowerNote");
+const shapes = document.getElementById("shapes");
+const stringE = document.getElementById("stringE");
+const stringA = document.getElementById("stringA");
+const fretSelect = document.getElementById("fretSelect");
+const lookupOut = document.getElementById("lookupText");
+
+function esc(value) {
+  return String(value).replace(/[&<>"']/g, (ch) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  }[ch]));
+}
+
+function chordSvg({ frets, fingers, optional = [], nut = true, rows = 4 }) {
+  const width = 128;
+  const left = 20;
+  const right = 108;
+  const top = nut ? 34 : 28;
+  const fretGap = 22;
+  const bottom = top + fretGap * rows;
+  const height = bottom + 6;
+  const gap = (right - left) / 5;
+  const parts = [`<svg viewBox="0 0 ${width} ${height}" aria-hidden="true">`];
+  if (nut) {
+    parts.push(`<rect class="nut" x="${left}" y="${top - 3}" width="${right - left}" height="4"></rect>`);
+  }
+  for (let row = nut ? 1 : 0; row <= rows; row++) {
+    const y = top + fretGap * row;
+    parts.push(`<line class="fretline" x1="${left}" y1="${y}" x2="${right}" y2="${y}"></line>`);
+  }
+  for (let string = 0; string < 6; string++) {
+    const x = left + gap * string;
+    const widthAttr = (1.1 + (5 - string) * 0.18).toFixed(2);
+    parts.push(`<line class="stringline" x1="${x}" y1="${top}" x2="${x}" y2="${bottom}" stroke-width="${widthAttr}"></line>`);
+  }
+  frets.forEach((fret, index) => {
+    const x = left + gap * index;
+    if (fret === null) {
+      parts.push(`<text class="mute" x="${x}" y="${top - 12}" text-anchor="middle">×</text>`);
+      return;
+    }
+    if (fret === 0) {
+      parts.push(`<circle class="open-mark" cx="${x}" cy="${top - 16}" r="4.5"></circle>`);
+      return;
+    }
+    const y = top + fretGap * (fret - 0.5);
+    const isOptional = Boolean(optional[index]);
+    parts.push(`<circle class="${isOptional ? "opt" : "dot"}" cx="${x}" cy="${y}" r="7.5"></circle>`);
+    if (fingers[index]) {
+      parts.push(`<text class="${isOptional ? "opt-num" : "num"}" x="${x}" y="${y + 4}" text-anchor="middle">${fingers[index]}</text>`);
+    }
+  });
+  parts.push("</svg>");
+  return parts.join("");
+}
+
+function diagramFor(shapeName) {
+  const shape = OPEN_CHORDS[shapeName];
+  return `<figure class="diagram">${chordSvg(shape)}<figcaption>${esc(shapeName)}</figcaption></figure>`;
+}
+
+function load() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE) || "null");
+    if (!saved) return;
+    if (Number.isInteger(saved.pc) && saved.pc >= 0 && saved.pc <= 11) state.pc = saved.pc;
+    if (typeof saved.minor === "boolean") state.minor = saved.minor;
+    if (Number.isInteger(saved.capo) && saved.capo >= 0 && saved.capo <= 7) state.capo = saved.capo;
+  } catch (error) {
+    /* keep defaults */
+  }
+}
+
+function save() {
+  localStorage.setItem(STORE, JSON.stringify({
+    pc: state.pc,
+    minor: state.minor,
+    capo: state.capo,
+  }));
+}
+
+function howShort(chord, capo) {
+  if (chord.quality === "dim") return { kind: "skip", text: "skip" };
+  const shape = findShape(chord.pc, chord.quality, capo);
+  if (!shape) return { kind: "power", text: "power" };
+  if (capo === 0) return { kind: "open", text: "open" };
+  return { kind: "open", text: shape };
+}
+
+function cardCopy(chord, capo) {
+  if (chord.quality === "dim") {
+    return "Skip this one. Simple songs rarely use it, and a power chord doesn't match it.";
+  }
+  const shape = findShape(chord.pc, chord.quality, capo);
+  if (shape && capo === 0) return "Open chord.";
+  if (shape) return "Play an open " + shape + ".";
+  return "No open shape. " + powerSentence(chord, capo);
+}
+
+function dominantChord(model) {
+  const fifth = model.chords[4];
+  return {
+    pc: fifth.pc,
+    name: fifth.name,
+    quality: "maj",
+    index: 4,
+    roman: "V",
+    symbol: fifth.name,
+    full: fifth.name + " major",
+    weight: 5,
+  };
+}
+
+function renderChart(model) {
+  chart.innerHTML = model.chords.map((chord) => {
+    const how = howShort(chord, state.capo);
+    const label = chord.roman + ", " + chord.full + ", " + (how.kind === "open" && state.capo ? "play " + how.text : how.text);
+    return `<button type="button" class="${how.kind}" data-target="chord-${chord.index}" aria-label="${esc(label)}">
+      <span class="roman">${esc(chord.roman)}</span>
+      <span class="sym">${esc(chord.symbol)}</span>
+      <span class="how">${esc(how.text)}</span>
+    </button>`;
+  }).join("");
+}
+
+function renderLegend() {
+  if (state.capo === 0) {
+    legend.textContent = "Green is an open chord you know. Gold is a power chord. The faded one is safe to skip.";
+    return;
+  }
+  legend.textContent = "The big name is the chord you hear. The small name is the open shape your fingers play. Gold still means a power chord.";
+}
+
+function renderBanner(model) {
+  const info = bannerModel(model, state.capo);
+  banner.className = "banner " + (info.action == null ? "good" : "tip");
+  const text = info.parts.map((part) => `<p>${esc(part)}</p>`).join("");
+  const button = info.action == null
+    ? ""
+    : `<button type="button" class="apply" data-apply-capo="${info.action}">Use capo ${info.action}</button>`;
+  banner.innerHTML = text + button;
+}
+
+function renderCapo(model) {
+  const rec = model.recommendation ? model.recommendation.capo : 0;
+  const buttons = [];
+  for (let capo = 0; capo <= 7; capo++) {
+    const pressed = capo === state.capo;
+    const best = capo === rec && capo !== state.capo;
+    const name = capo === 0 ? "No capo" : "Capo " + capo;
+    buttons.push(`<button type="button" id="capo-${capo}" data-capo="${capo}" aria-pressed="${pressed}" aria-label="${name}${best ? ", easier option" : ""}">
+      <b>${capo === 0 ? "Off" : capo}</b>
+      <small>${best ? "best" : ""}</small>
+    </button>`);
+  }
+  const scroll = capoRow.scrollLeft;
+  capoRow.innerHTML = buttons.join("");
+  capoRow.scrollLeft = scroll;
+  const selected = document.getElementById("capo-" + state.capo);
+  if (selected) {
+    const left = selected.offsetLeft - capoRow.clientWidth / 2 + selected.offsetWidth / 2;
+    capoRow.scrollLeft = Math.max(0, left);
+  }
+}
+
+function renderCards(model) {
+  const items = model.chords.map((chord) => {
+    const how = howShort(chord, state.capo);
+    const shape = findShape(chord.pc, chord.quality, state.capo);
+    const picture = shape ? diagramFor(shape) : "";
+    return `<article class="chord ${how.kind}" id="chord-${chord.index}">
+      <div class="roman">${esc(chord.roman)}</div>
+      <div>
+        <h3>${esc(chord.full)}</h3>
+        <p class="detail">${esc(cardCopy(chord, state.capo))}</p>
+      </div>
+      ${picture}
+    </article>`;
+  });
+  if (model.minor) {
+    const dom = dominantChord(model);
+    const shape = findShape(dom.pc, "maj", state.capo);
+    const picture = shape ? diagramFor(shape) : "";
+    const detail = shape
+      ? (state.capo === 0 ? "Open chord. " : "Play an open " + shape + ". ") + "Minor songs often make the 5 chord major."
+      : "Minor songs often make the 5 chord major. " + powerSentence(dom, state.capo);
+    items.push(`<article class="chord ${shape ? "open" : "power"}" id="chord-dom">
+      <div class="roman">V</div>
+      <div>
+        <p class="kicker">Often used</p>
+        <h3>${esc(dom.full)}</h3>
+        <p class="detail">${esc(detail)}</p>
+      </div>
+      ${picture}
+    </article>`);
+  }
+  cards.innerHTML = items.join("");
+}
+
+function renderPower(model) {
+  const usable = model.chords.filter((chord) => chord.quality !== "dim");
+  const home = model.tonic + "5";
+  const names = joinList(usable.map(friendlyPower));
+  const core = joinList([0, 3, 4].map((index) => friendlyPower(model.chords[index])));
+  const dim = model.chords.find((chord) => chord.quality === "dim");
+  let second = "In " + model.label + ", the power chords are " + names + ". " + core + " are the ones songs lean on.";
+  if (model.minor) {
+    second += " " + friendlyPower(model.chords[5]) + " and " + friendlyPower(model.chords[6]) + " show up a lot too.";
+  }
+  second += " " + dim.symbol + " doesn't get a power chord.";
+  powerIntro.innerHTML = `<p>A power chord is the root and the fifth. ${esc(model.tonic)} and ${esc(model.tonic)}m are the same power chord, ${esc(home)}, so it belongs to both ${esc(model.tonic)} major and ${esc(model.tonic)} minor.</p><p>${esc(second)}</p>`;
+  capoPowerNote.textContent = state.capo > 0 ? "Fret numbers are with the capo off." : "";
+  const coreSet = new Set([0, 3, 4]);
+  powerGrid.innerHTML = usable.map((chord) => {
+    const spots = powerPositions(chord.pc);
+    const alias = friendlyPower(chord).includes("(")
+      ? `<span class="alias">same as ${esc(SHARP[chord.pc])}5</span>`
+      : "";
+    const alt = spots.alternates[0] ? `<span class="alt">or ${esc(spotShort(spots.alternates[0]))}</span>` : "";
+    return `<div class="power-card${coreSet.has(chord.index) ? " core" : ""}">
+      <span class="roman">${esc(chord.roman)}</span>
+      <strong>${esc(chord.name)}5</strong>
+      ${alias}
+      <span class="where">${esc(spotShort(spots.primary))}</span>
+      ${alt}
+    </div>`;
+  }).join("");
+}
+
+function renderShapes() {
+  if (shapes.childElementCount) return;
+  const lowE = {
+    frets: [1, 3, 3, null, null, null],
+    fingers: [1, 3, 4, 0, 0, 0],
+    optional: [false, false, true, false, false, false],
+    nut: false,
+    rows: 3,
+  };
+  const aString = {
+    frets: [null, 1, 3, 3, null, null],
+    fingers: [0, 1, 3, 4, 0, 0],
+    optional: [false, false, false, true, false, false],
+    nut: false,
+    rows: 3,
+  };
+  shapes.innerHTML = `
+    <div class="shape-card">
+      <h3>Root on the low E</h3>
+      <figure class="diagram">${chordSvg(lowE)}</figure>
+    </div>
+    <div class="shape-card">
+      <h3>Root on the A string</h3>
+      <figure class="diagram">${chordSvg(aString)}</figure>
+    </div>`;
+}
+
+function renderLookup() {
+  stringE.setAttribute("aria-pressed", String(state.string === "E"));
+  stringA.setAttribute("aria-pressed", String(state.string === "A"));
+  fretSelect.value = String(state.fret);
+  lookupOut.textContent = lookupText(state.string, state.fret);
+}
+
+function render(options = {}) {
+  const model = buildKey(state.pc, state.minor);
+  document.title = model.label + " chords";
+  keySelect.value = String(state.pc);
+  majorBtn.setAttribute("aria-pressed", String(!state.minor));
+  minorBtn.setAttribute("aria-pressed", String(state.minor));
+  heading.textContent = model.label;
+  renderCapo(model);
+  renderChart(model);
+  renderLegend();
+  renderBanner(model);
+  renderCards(model);
+  renderPower(model);
+  renderLookup();
+  save();
+  if (options.focusCapo) document.getElementById("capo-" + state.capo)?.focus();
+}
+
+function init() {
+  load();
+  KEY_OPTIONS.forEach(([pc, label]) => {
+    const option = document.createElement("option");
+    option.value = String(pc);
+    option.textContent = label;
+    keySelect.append(option);
+  });
+  const open = document.createElement("option");
+  open.value = "0";
+  open.textContent = "Open";
+  fretSelect.append(open);
+  for (let fret = 1; fret <= 12; fret++) {
+    const option = document.createElement("option");
+    option.value = String(fret);
+    option.textContent = String(fret);
+    fretSelect.append(option);
+  }
+  keySelect.addEventListener("change", () => {
+    state.pc = Number(keySelect.value);
+    state.capo = 0;
+    render();
+  });
+  majorBtn.addEventListener("click", () => {
+    state.minor = false;
+    state.capo = 0;
+    render();
+  });
+  minorBtn.addEventListener("click", () => {
+    state.minor = true;
+    state.capo = 0;
+    render();
+  });
+  capoRow.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-capo]");
+    if (!button) return;
+    state.capo = Number(button.dataset.capo);
+    render();
+  });
+  banner.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-apply-capo]");
+    if (!button) return;
+    state.capo = Number(button.dataset.applyCapo);
+    render({ focusCapo: true });
+  });
+  chart.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-target]");
+    if (!button) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.getElementById(button.dataset.target)?.scrollIntoView({
+      behavior: reduce ? "auto" : "smooth",
+      block: "center",
+    });
+  });
+  stringE.addEventListener("click", () => {
+    state.string = "E";
+    renderLookup();
+  });
+  stringA.addEventListener("click", () => {
+    state.string = "A";
+    renderLookup();
+  });
+  fretSelect.addEventListener("change", () => {
+    state.fret = Number(fretSelect.value);
+    renderLookup();
+  });
+  renderShapes();
+  render();
+}
+
+init();
 </script>
 </body>
 </html>
