@@ -95,7 +95,9 @@ select {
   background: var(--gold-dim);
   color: var(--gold);
 }
+.play-field { margin-top: 12px; }
 .capo-field { margin-top: 12px; }
+.capo-field[hidden] { display: none; }
 .capo {
   display: flex;
   gap: 6px;
@@ -160,6 +162,8 @@ h1 {
 .chart button + button { border-left: 1px solid var(--line); }
 .chart button.open { border-top-color: var(--green); }
 .chart button.power { border-top-color: var(--gold); }
+.chart button.barre { border-top-color: #fb7185; }
+.chart button.barre .how { color: #fecdd3; }
 .chart button.picked { box-shadow: inset 0 0 0 2px #f4f7fb; }
 .chart .roman {
   display: block;
@@ -242,6 +246,7 @@ h2 {
 .chord.open { border-left-color: var(--green); }
 .chord.power { border-left-color: var(--gold); }
 .chord.skip { border-left-color: #2a3346; }
+.chord.barre { border-left-color: #fb7185; }
 .chord.solo-on { box-shadow: inset 0 0 0 1px rgba(240, 193, 75, 0.85); }
 .chord .roman {
   align-self: start;
@@ -282,6 +287,10 @@ h2 {
   font-weight: 800;
   color: var(--green);
 }
+.diagram figcaption.barre-cap { color: #fecdd3; }
+.barre-bar { fill: #fb7185; }
+.barre-num { fill: #fff; font-size: 11px; font-weight: 700; font-family: ui-sans-serif, system-ui, sans-serif; }
+.fret-tag { fill: #fecdd3; font-size: 11px; font-weight: 700; font-family: ui-sans-serif, system-ui, sans-serif; }
 .prose p { margin: 0 0 8px; color: var(--soft); font-size: 15px; }
 .powers {
   display: grid;
@@ -395,7 +404,9 @@ h2 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(68px, 1fr));
 }
-#patRow { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+#patRow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.pat-head { flex-wrap: wrap; }
+.neck-switch { flex: 1; min-width: 220px; }
 #patRow button { min-width: 0; padding-left: 0; padding-right: 0; }
 .neck-scroll {
   margin-top: 10px;
@@ -537,7 +548,14 @@ footer {
         </div>
       </div>
     </div>
-    <div class="capo-field">
+    <div class="play-field">
+      <span class="field-label">Play the chords</span>
+      <div class="seg play-switch" role="group" aria-label="Play the chords">
+        <button type="button" data-play="capo">With a capo</button>
+        <button type="button" data-play="barre">Barre chords</button>
+      </div>
+    </div>
+    <div class="capo-field" id="capoField">
       <span class="field-label" id="capoLabel">Capo</span>
       <div id="capoRow" class="capo" role="group" aria-labelledby="capoLabel"></div>
     </div>
@@ -549,28 +567,41 @@ footer {
   <div id="banner" class="banner" aria-live="polite"></div>
 
   <section id="solo" class="solo">
-    <h2>Solo over the chords</h2>
+    <h2>On the fretboard</h2>
+    <div class="pat-head">
+      <div class="seg neck-switch" role="group" aria-label="What the fretboard shows">
+        <button type="button" data-neck="patterns">Patterns and arpeggios</button>
+        <button type="button" data-neck="chords">Chords</button>
+      </div>
+      <button type="button" id="namesBtn" class="text-toggle">Names</button>
+    </div>
     <p id="soloLead" class="legend"></p>
     <div class="field">
       <span class="field-label" id="arpLabel">Arpeggio</span>
       <div id="arpRow" class="capo" role="group" aria-labelledby="arpLabel"></div>
     </div>
-    <div class="pat-head">
+    <div id="patBlock">
       <span class="field-label" id="patLabel">Patterns</span>
-      <button type="button" id="namesBtn" class="text-toggle">Names</button>
+      <div id="patRow" class="capo" role="group" aria-labelledby="patLabel"></div>
+      <p id="patNote" class="legend"></p>
     </div>
-    <div id="patRow" class="capo" role="group" aria-labelledby="patLabel"></div>
-    <p id="patNote" class="legend"></p>
     <div id="neckScroll" class="neck-scroll"></div>
     <p class="legend dots-legend">
       <span><i class="ndot root" style="width:12px;height:12px"></i> root</span>
-      <span><i class="ndot arp" style="width:12px;height:12px"></i> arpeggio</span>
-      <span><i class="ndot scale" style="width:12px;height:12px"></i> rest of the scale</span>
+      <span><i class="ndot arp" style="width:12px;height:12px"></i> <span id="goldLegend">arpeggio</span></span>
+      <span id="scaleLegend"><i class="ndot scale" style="width:12px;height:12px"></i> rest of the scale</span>
     </p>
     <p id="capoSoloNote" class="capo-note"></p>
   </section>
 
   <h2>How to play them</h2>
+  <div class="play-field">
+    <span class="field-label">Same chords, two ways</span>
+    <div class="seg play-switch" role="group" aria-label="Play the chords">
+      <button type="button" data-play="capo">With a capo</button>
+      <button type="button" data-play="barre">Barre chords</button>
+    </div>
+  </div>
   <div id="cards" class="cards"></div>
 
   <h2>Power chords</h2>
@@ -887,32 +918,33 @@ function spellInterval(rootName, rootPc, semitones) {
   return spell(letter, (rootPc + semitones) % 12);
 }
 
-function diatonicPatterns(scalePcs) {
-  const patterns = [];
-  for (let start = 0; start < 7; start++) {
-    let degree = start;
-    let floor = 0;
-    const strings = [];
-    LOW_TO_HIGH.forEach((openPc) => {
+function boxPatterns(scalePcs, minor) {
+  const rootPc = scalePcs[0];
+  const rootFret = (rootPc - 4 + 12) % 12;
+  const windows = minor
+    ? [[0, 3], [2, 5], [5, 8], [7, 10], [-3, 0]]
+    : [[0, 4], [2, 6], [5, 9], [7, 11], [-3, 1]];
+  return windows.map(([start, end]) => {
+    let lo = rootFret + start;
+    let hi = rootFret + end;
+    if (lo < 0) {
+      lo += 12;
+      hi += 12;
+    }
+    return LOW_TO_HIGH.map((openPc) => {
       const notes = [];
-      for (let step = 0; step < 3; step++) {
-        const pc = scalePcs[degree];
-        let fret = (pc - openPc + 12) % 12;
-        const min = step === 0 ? floor : notes[step - 1].fret + 1;
-        while (fret < min) fret += 12;
-        notes.push({ fret, pc, degree });
-        degree = (degree + 1) % 7;
+      for (let fret = lo; fret <= hi; fret++) {
+        if (fret < 0 || fret > 15) continue;
+        const pc = (openPc + fret) % 12;
+        if (scalePcs.includes(pc)) notes.push({ fret, pc });
       }
-      strings.push(notes);
-      floor = Math.max(0, notes[0].fret - 1);
+      return notes;
     });
-    patterns.push(strings);
-  }
-  return patterns;
+  });
 }
 
-function neckNotes(scalePcs, enabled, arpPcs, rootPc) {
-  const patterns = diatonicPatterns(scalePcs);
+function neckNotes(scalePcs, enabled, arpPcs, rootPc, minor) {
+  const patterns = boxPatterns(scalePcs, minor);
   const cells = Array.from({ length: 6 }, () => ({}));
   const rank = { scale: 1, arp: 2, root: 3 };
   function put(stringIndex, fret, pc, kind) {
@@ -923,20 +955,61 @@ function neckNotes(scalePcs, enabled, arpPcs, rootPc) {
   patterns.forEach((strings, pattern) => {
     if (!enabled[pattern]) return;
     strings.forEach((notes, stringIndex) => {
-      const min = notes[0].fret;
-      const max = notes[notes.length - 1].fret;
       notes.forEach((note) => {
         const kind = note.pc === rootPc ? "root" : arpPcs.includes(note.pc) ? "arp" : "scale";
         put(stringIndex, note.fret, note.pc, kind);
       });
-      for (let fret = Math.max(0, min - 1); fret <= max + 1; fret++) {
-        const pc = (LOW_TO_HIGH[stringIndex] + fret) % 12;
-        if (pc === rootPc) put(stringIndex, fret, pc, "root");
-        else if (arpPcs.includes(pc)) put(stringIndex, fret, pc, "arp");
-      }
     });
   });
   return { patterns, cells };
+}
+
+function chordGrips(chord) {
+  if (chord.quality !== "maj" && chord.quality !== "min") return [];
+  const notes = [];
+  const seen = new Set();
+  function add(stringIndex, fret) {
+    if (fret == null || fret < 0 || fret > 15) return;
+    const key = stringIndex + ":" + fret;
+    if (seen.has(key)) return;
+    seen.add(key);
+    notes.push({
+      s: stringIndex,
+      fret,
+      pc: (LOW_TO_HIGH[stringIndex] + fret) % 12,
+    });
+  }
+  const openName = findShape(chord.pc, chord.quality, 0);
+  if (openName && OPEN_CHORDS[openName]) {
+    OPEN_CHORDS[openName].frets.forEach((fret, stringIndex) => add(stringIndex, fret));
+  }
+  const openIsE = openName === "E" || openName === "Em";
+  const openIsA = openName === "A" || openName === "Am";
+  const positions = [
+    { shape: "E", fret: (chord.pc - 4 + 12) % 12 || 12 },
+    { shape: "A", fret: (chord.pc - 9 + 12) % 12 || 12 },
+  ];
+  positions.forEach(({ shape, fret }) => {
+    if (fret === 12 && ((shape === "E" && openIsE) || (shape === "A" && openIsA))) return;
+    const offsets = shape === "E"
+      ? (chord.quality === "min" ? [0, 2, 2, 0, 0, 0] : [0, 2, 2, 1, 0, 0])
+      : (chord.quality === "min" ? [null, 0, 2, 2, 1, 0] : [null, 0, 2, 2, 2, 0]);
+    offsets.forEach((offset, stringIndex) => {
+      if (offset == null) return;
+      add(stringIndex, fret + offset);
+    });
+  });
+  return notes;
+}
+
+function barreFor(pc, quality) {
+  if (quality !== "maj" && quality !== "min") return null;
+  let eFret = (pc - 4 + 12) % 12;
+  let aFret = (pc - 9 + 12) % 12;
+  if (eFret === 0) eFret = 12;
+  if (aFret === 0) aFret = 12;
+  const shape = eFret <= aFret ? "E" : "A";
+  return { shape, fret: shape === "E" ? eFret : aFret, quality, pc };
 }
 // @theory-end
 
@@ -949,7 +1022,9 @@ const state = {
   fret: 3,
   arp: 0,
   names: true,
-  patterns: [true, true, false, false, false, false, false],
+  patterns: [true, true, false, false, false],
+  play: "capo",
+  neck: "patterns",
 };
 
 const keySelect = document.getElementById("keySelect");
@@ -987,16 +1062,19 @@ function esc(value) {
   }[ch]));
 }
 
-function chordSvg({ frets, fingers, optional = [], nut = true, rows = 4 }) {
+function chordSvg({ frets, fingers, optional = [], nut = true, rows = 4, barre = null, baseFret = 0 }) {
   const width = 128;
-  const left = 20;
-  const right = 108;
+  const left = 22;
+  const right = 112;
   const top = nut ? 34 : 28;
   const fretGap = 22;
   const bottom = top + fretGap * rows;
   const height = bottom + 6;
   const gap = (right - left) / 5;
   const parts = [`<svg viewBox="0 0 ${width} ${height}" aria-hidden="true">`];
+  if (baseFret) {
+    parts.push(`<text class="fret-tag" x="11" y="${top + fretGap * 0.55}" text-anchor="middle">${baseFret}</text>`);
+  }
   if (nut) {
     parts.push(`<rect class="nut" x="${left}" y="${top - 3}" width="${right - left}" height="4"></rect>`);
   }
@@ -1009,12 +1087,23 @@ function chordSvg({ frets, fingers, optional = [], nut = true, rows = 4 }) {
     const widthAttr = (1.1 + (5 - string) * 0.18).toFixed(2);
     parts.push(`<line class="stringline" x1="${x}" y1="${top}" x2="${x}" y2="${bottom}" stroke-width="${widthAttr}"></line>`);
   }
+  if (barre) {
+    const x1 = left + gap * barre.from;
+    const x2 = left + gap * barre.to;
+    const y = top + fretGap * (barre.fret - 0.5);
+    const x = Math.min(x1, x2) - 8;
+    const w = Math.abs(x2 - x1) + 16;
+    parts.push(`<rect class="barre-bar" x="${x}" y="${y - 8}" width="${w}" height="16" rx="8"></rect>`);
+    parts.push(`<text class="barre-num" x="${(x1 + x2) / 2}" y="${y + 4}" text-anchor="middle">1</text>`);
+  }
   frets.forEach((fret, index) => {
     const x = left + gap * index;
+    const underBarre = barre && index >= Math.min(barre.from, barre.to) && index <= Math.max(barre.from, barre.to) && fret === barre.fret;
     if (fret === null) {
       parts.push(`<text class="mute" x="${x}" y="${top - 12}" text-anchor="middle">×</text>`);
       return;
     }
+    if (underBarre) return;
     if (fret === 0) {
       parts.push(`<circle class="open-mark" cx="${x}" cy="${top - 16}" r="4.5"></circle>`);
       return;
@@ -1028,6 +1117,19 @@ function chordSvg({ frets, fingers, optional = [], nut = true, rows = 4 }) {
   });
   parts.push("</svg>");
   return parts.join("");
+}
+
+function barreDiagram(spec) {
+  const minor = spec.quality === "min";
+  const frets = spec.shape === "E"
+    ? (minor ? [1, 3, 3, 1, 1, 1] : [1, 3, 3, 2, 1, 1])
+    : (minor ? [null, 1, 3, 3, 2, 1] : [null, 1, 3, 3, 3, 1]);
+  const fingers = spec.shape === "E"
+    ? (minor ? [0, 3, 4, 0, 0, 0] : [0, 3, 4, 2, 0, 0])
+    : (minor ? [0, 0, 3, 4, 2, 0] : [0, 0, 2, 3, 4, 0]);
+  const barre = spec.shape === "E" ? { from: 0, to: 5, fret: 1 } : { from: 1, to: 5, fret: 1 };
+  const svg = chordSvg({ frets, fingers, nut: false, rows: 4, barre, baseFret: spec.fret });
+  return `<figure class="diagram">${svg}<figcaption class="barre-cap">Fret ${spec.fret}</figcaption></figure>`;
 }
 
 function diagramFor(shapeName) {
@@ -1044,9 +1146,11 @@ function load() {
     if (Number.isInteger(saved.capo) && saved.capo >= 0 && saved.capo <= 7) state.capo = saved.capo;
     if (saved.arp === "dom" || (Number.isInteger(saved.arp) && saved.arp >= 0 && saved.arp <= 6)) state.arp = saved.arp;
     if (typeof saved.names === "boolean") state.names = saved.names;
-    if (Array.isArray(saved.patterns) && saved.patterns.length === 7 && saved.patterns.every((on) => typeof on === "boolean")) {
+    if (Array.isArray(saved.patterns) && saved.patterns.length === 5 && saved.patterns.every((on) => typeof on === "boolean")) {
       state.patterns = saved.patterns;
     }
+    if (saved.play === "capo" || saved.play === "barre") state.play = saved.play;
+    if (saved.neck === "patterns" || saved.neck === "chords") state.neck = saved.neck;
   } catch (error) {
     /* keep defaults */
   }
@@ -1060,11 +1164,26 @@ function save() {
     arp: state.arp,
     names: state.names,
     patterns: state.patterns,
+    play: state.play,
+    neck: state.neck,
   }));
+}
+
+function barreBlurb(chord) {
+  const barre = barreFor(chord.pc, chord.quality);
+  const shapeWord = barre.shape + (chord.quality === "min" ? " minor" : " major");
+  const open = findShape(chord.pc, chord.quality, 0);
+  let text = shapeWord + " shape. Index finger barres at fret " + barre.fret + ".";
+  if (open) text += " Open " + open + " works too.";
+  return text;
 }
 
 function howShort(chord, capo) {
   if (chord.quality === "dim") return { kind: "skip", text: "skip" };
+  if (state.play === "barre") {
+    const barre = barreFor(chord.pc, chord.quality);
+    return { kind: "barre", text: barre.fret + "fr" };
+  }
   const shape = findShape(chord.pc, chord.quality, capo);
   if (!shape) return { kind: "power", text: "power" };
   if (capo === 0) return { kind: "open", text: "open" };
@@ -1075,6 +1194,7 @@ function cardCopy(chord, capo) {
   if (chord.quality === "dim") {
     return "Skip this one. Simple songs rarely use it, and a power chord doesn't match it.";
   }
+  if (state.play === "barre") return barreBlurb(chord);
   const shape = findShape(chord.pc, chord.quality, capo);
   if (shape && capo === 0) return "Open chord.";
   if (shape) return "Play an open " + shape + ".";
@@ -1109,6 +1229,10 @@ function renderChart(model) {
 }
 
 function renderLegend() {
+  if (state.play === "barre") {
+    legend.textContent = "The number is the fret your index finger barres. The faded chord is safe to skip.";
+    return;
+  }
   if (state.capo === 0) {
     legend.textContent = "Green is an open chord you know. Gold is a power chord. The faded one is safe to skip.";
     return;
@@ -1117,6 +1241,21 @@ function renderLegend() {
 }
 
 function renderBanner(model) {
+  if (state.play === "barre") {
+    const rec = model.recommendation;
+    const parts = ["Barre chords for " + model.label + ". Every card is one chord in the key, with the fret your index finger barres."];
+    let button = "";
+    if (rec && rec.capo > 0) {
+      const via = pretendKey(model.chords, rec.capo, model.minor);
+      parts.push("Or capo " + rec.capo + ", and play " + via + " shapes.");
+      button = `<button type="button" class="apply" data-apply-capo="${rec.capo}">Use capo ${rec.capo}</button>`;
+    } else if (rec) {
+      parts.push("The open shapes in this key already cover it, so a capo is optional.");
+    }
+    banner.className = "banner tip";
+    banner.innerHTML = parts.map((part) => `<p>${esc(part)}</p>`).join("") + button;
+    return;
+  }
   const info = bannerModel(model, state.capo);
   banner.className = "banner " + (info.action == null ? "good" : "tip");
   const text = info.parts.map((part) => `<p>${esc(part)}</p>`).join("");
@@ -1148,11 +1287,16 @@ function renderCapo(model) {
   }
 }
 
+function chordPicture(chord, capo) {
+  if (chord.quality === "dim") return "";
+  if (state.play === "barre") return barreDiagram(barreFor(chord.pc, chord.quality));
+  const shape = findShape(chord.pc, chord.quality, capo);
+  return shape ? diagramFor(shape) : "";
+}
+
 function renderCards(model) {
   const items = model.chords.map((chord) => {
     const how = howShort(chord, state.capo);
-    const shape = findShape(chord.pc, chord.quality, state.capo);
-    const picture = shape ? diagramFor(shape) : "";
     const soloOn = state.arp === chord.index ? " solo-on" : "";
     return `<article class="chord ${how.kind}${soloOn}" id="chord-${chord.index}" data-arp="${chord.index}">
       <div class="roman">${esc(chord.roman)}</div>
@@ -1160,25 +1304,22 @@ function renderCards(model) {
         <h3>${esc(chord.full)}</h3>
         <p class="detail">${esc(cardCopy(chord, state.capo))}</p>
       </div>
-      ${picture}
+      ${chordPicture(chord, state.capo)}
     </article>`;
   });
   if (model.minor) {
     const dom = dominantChord(model);
-    const shape = findShape(dom.pc, "maj", state.capo);
-    const picture = shape ? diagramFor(shape) : "";
-    const detail = shape
-      ? (state.capo === 0 ? "Open chord. " : "Play an open " + shape + ". ") + "Minor songs often make the 5 chord major."
-      : "Minor songs often make the 5 chord major. " + powerSentence(dom, state.capo);
+    const how = howShort(dom, state.capo);
+    const detail = (state.play === "barre" ? barreBlurb(dom) : cardCopy(dom, state.capo)) + " Minor songs often make the 5 chord major.";
     const soloOn = state.arp === "dom" ? " solo-on" : "";
-    items.push(`<article class="chord ${shape ? "open" : "power"}${soloOn}" id="chord-dom" data-arp="dom">
+    items.push(`<article class="chord ${how.kind}${soloOn}" id="chord-dom" data-arp="dom">
       <div class="roman">V</div>
       <div>
         <p class="kicker">Often used</p>
         <h3>${esc(dom.full)}</h3>
         <p class="detail">${esc(detail)}</p>
       </div>
-      ${picture}
+      ${chordPicture(dom, state.capo)}
     </article>`);
   }
   cards.innerHTML = items.join("");
@@ -1259,7 +1400,22 @@ function renderSolo(model) {
   model.chords.forEach((chord) => { names[chord.pc] = chord.name; });
   spelled.forEach((name, index) => { names[arpPcs[index]] = name; });
 
-  soloLead.textContent = arp.full + " is " + spelled.join(" · ") + ". Pink is the root. Gold finishes the arpeggio. Blue is the rest of the scale, only inside the patterns you have on.";
+  document.querySelectorAll("[data-neck]").forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.neck === state.neck));
+  });
+  document.getElementById("patBlock").hidden = state.neck !== "patterns";
+  document.getElementById("arpLabel").textContent = state.neck === "chords" ? "Chord" : "Arpeggio";
+  document.getElementById("goldLegend").textContent = state.neck === "chords" ? "chord tone" : "arpeggio";
+  document.getElementById("scaleLegend").hidden = state.neck === "chords";
+
+  const showingChords = state.neck === "chords";
+  if (showingChords) {
+    soloLead.textContent = arp.quality === "dim"
+      ? "Diminished chords do not have one simple grip. Pick another chord."
+      : arp.full + " on the neck. Pink is the root. This draws the open shape, when you have one, and the barre shapes.";
+  } else {
+    soloLead.textContent = arp.full + " is " + spelled.join(" · ") + ". Pink is the root. Gold is the rest of that arpeggio, inside the box. Blue is the rest of the scale in the patterns you have on.";
+  }
 
   const arpButtons = model.chords.map((chord) => {
     const on = state.arp === chord.index;
@@ -1277,15 +1433,31 @@ function renderSolo(model) {
   namesBtn.textContent = state.names ? "Names on" : "Names off";
 
   const scalePcs = model.chords.map((chord) => chord.pc);
-  const { patterns, cells } = neckNotes(scalePcs, state.patterns, arpPcs, arp.pc);
-  const enabled = state.patterns.flatMap((on, index) => on ? [index] : []);
-  if (!enabled.length) {
-    patNote.textContent = "Turn a pattern on. Pattern 1 starts on the root, on the low E string. Each next one starts one scale note higher.";
-  } else {
-    const start = patterns[enabled[0]][0][0];
-    const startName = names[start.pc] || SHARP[start.pc];
-    const where = start.fret === 0 ? "the open low E string" : "fret " + start.fret + " on the low E string";
-    patNote.textContent = "Pattern " + (enabled[0] + 1) + " starts on " + startName + ", " + where + ". Each next pattern starts one scale note higher.";
+  const cells = Array.from({ length: 6 }, () => ({}));
+  let scrollFret = 0;
+  if (showingChords && arp.quality !== "dim") {
+    chordGrips(arp).forEach((note) => {
+      const kind = note.pc === arp.pc ? "root" : "arp";
+      const prev = cells[note.s][note.fret];
+      if (!prev || kind === "root") cells[note.s][note.fret] = { pc: note.pc, kind };
+    });
+    const frets = cells.flatMap((stringCells) => Object.keys(stringCells).map(Number)).filter((fret) => fret > 0);
+    scrollFret = frets.length ? Math.min(...frets) : 0;
+  } else if (!showingChords) {
+    const neck = neckNotes(scalePcs, state.patterns, arpPcs, arp.pc, model.minor);
+    neck.cells.forEach((stringCells, stringIndex) => { cells[stringIndex] = stringCells; });
+    const enabled = state.patterns.flatMap((on, index) => on ? [index] : []);
+    if (!enabled.length) {
+      patNote.textContent = "Turn a pattern on. Pattern 1 is the box with your index finger on the root.";
+    } else {
+      const notes = neck.patterns[enabled[0]].flat();
+      if (notes.length) {
+        const root = notes.find((note) => note.pc === scalePcs[0]) || notes[0];
+        const where = root.fret === 0 ? "the open low E string" : "fret " + root.fret;
+        patNote.textContent = "Pattern " + (enabled[0] + 1) + " is one hand position, starting at " + where + ". The root sits on the low E string.";
+        scrollFret = Math.min(...notes.map((note) => note.fret));
+      }
+    }
   }
 
   let maxFret = 12;
@@ -1321,10 +1493,7 @@ function renderSolo(model) {
   }
   html += `</div>`;
   neckScroll.innerHTML = html;
-  if (enabled.length) {
-    const startFret = patterns[enabled[0]][0][0].fret;
-    neckScroll.scrollLeft = Math.max(0, (startFret - 1) * fretW);
-  }
+  neckScroll.scrollLeft = Math.max(0, (scrollFret - 1) * fretW);
   capoSoloNote.textContent = state.capo > 0
     ? "This neck is " + model.label + " with the capo off. The chord shapes above follow the capo."
     : "";
@@ -1343,6 +1512,10 @@ function render(options = {}) {
   keySelect.value = String(state.pc);
   majorBtn.setAttribute("aria-pressed", String(!state.minor));
   minorBtn.setAttribute("aria-pressed", String(state.minor));
+  document.querySelectorAll("[data-play]").forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.play === state.play));
+  });
+  document.getElementById("capoField").hidden = state.play !== "capo";
   heading.textContent = model.label;
   renderCapo(model);
   renderChart(model);
@@ -1389,6 +1562,14 @@ function init() {
     state.capo = 0;
     render();
   });
+  document.querySelectorAll(".play-switch").forEach((group) => {
+    group.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-play]");
+      if (!button) return;
+      state.play = button.dataset.play;
+      render();
+    });
+  });
   capoRow.addEventListener("click", (event) => {
     const button = event.target.closest("[data-capo]");
     if (!button) return;
@@ -1430,6 +1611,12 @@ function init() {
   });
   namesBtn.addEventListener("click", () => {
     state.names = !state.names;
+    render();
+  });
+  document.querySelector(".neck-switch").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-neck]");
+    if (!button) return;
+    state.neck = button.dataset.neck;
     render();
   });
   stringE.addEventListener("click", () => {
