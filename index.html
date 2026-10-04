@@ -37,7 +37,7 @@ body {
 button, select { font: inherit; color: inherit; }
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.app { max-width: 40rem; margin: 0 auto; }
+.app { max-width: 52rem; margin: 0 auto; }
 .eyebrow {
   margin: 2px 0 12px;
   font-size: 12px;
@@ -160,6 +160,7 @@ h1 {
 .chart button + button { border-left: 1px solid var(--line); }
 .chart button.open { border-top-color: var(--green); }
 .chart button.power { border-top-color: var(--gold); }
+.chart button.picked { box-shadow: inset 0 0 0 2px #f4f7fb; }
 .chart .roman {
   display: block;
   font-size: 10px;
@@ -241,6 +242,7 @@ h2 {
 .chord.open { border-left-color: var(--green); }
 .chord.power { border-left-color: var(--gold); }
 .chord.skip { border-left-color: #2a3346; }
+.chord.solo-on { box-shadow: inset 0 0 0 1px rgba(240, 193, 75, 0.85); }
 .chord .roman {
   align-self: start;
   margin-top: 3px;
@@ -364,6 +366,132 @@ h2 {
   color: var(--soft);
 }
 .capo-note { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+.solo { scroll-margin: 12px; }
+.pat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+}
+.pat-head .field-label { margin: 0; }
+.text-toggle {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: #0e1524;
+  color: var(--soft);
+  font-weight: 700;
+}
+.text-toggle[aria-pressed="true"] {
+  background: var(--gold-dim);
+  color: var(--gold);
+  border-color: var(--gold);
+}
+.solo .field { margin-top: 12px; }
+#arpRow, #patRow { overflow: visible; }
+#arpRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(68px, 1fr));
+}
+#patRow { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+#patRow button { min-width: 0; padding-left: 0; padding-right: 0; }
+.neck-scroll {
+  margin-top: 10px;
+  overflow-x: auto;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: #1c140e;
+  -webkit-overflow-scrolling: touch;
+}
+.neck {
+  --fretw: 44px;
+  display: grid;
+  grid-template-columns: 34px repeat(var(--cols), var(--fretw));
+  width: max-content;
+  min-width: 100%;
+  background: linear-gradient(#3b2b1d, #24180f 40%, #1a120c);
+}
+.fretnum, .inlay {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #cbbfa8;
+  font-size: 11px;
+  font-weight: 700;
+}
+.sname {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e7d7b8;
+  font-size: 12px;
+  font-weight: 800;
+}
+.sname, .neck .fretnum:first-child, .neck .inlay:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #2a1c12;
+}
+.cell {
+  position: relative;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cell::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  background: rgba(232, 214, 180, 0.28);
+}
+.cell::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 2px;
+  background: rgba(226, 205, 168, 0.45);
+}
+.cell.open::after {
+  width: 5px;
+  right: -1px;
+  background: #f0e2c4;
+}
+.ndot {
+  position: relative;
+  z-index: 1;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.ndot.root { background: #fb7185; color: #fff; }
+.ndot.arp { background: var(--gold); color: var(--gold-ink); }
+.ndot.scale { background: #35588a; color: #e7f0ff; }
+.ndot.empty { background: transparent; }
+.pearl, .pearl i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(240, 226, 196, 0.8);
+}
+.pearl.double { display: flex; gap: 4px; width: auto; background: transparent; }
+.dots-legend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 8px; }
+.dots-legend span { display: inline-flex; align-items: center; gap: 6px; }
 footer {
   margin-top: 28px;
   text-align: center;
@@ -419,6 +547,28 @@ footer {
   <div id="chart" class="chart"></div>
   <p id="legend" class="legend"></p>
   <div id="banner" class="banner" aria-live="polite"></div>
+
+  <section id="solo" class="solo">
+    <h2>Solo over the chords</h2>
+    <p id="soloLead" class="legend"></p>
+    <div class="field">
+      <span class="field-label" id="arpLabel">Arpeggio</span>
+      <div id="arpRow" class="capo" role="group" aria-labelledby="arpLabel"></div>
+    </div>
+    <div class="pat-head">
+      <span class="field-label" id="patLabel">Patterns</span>
+      <button type="button" id="namesBtn" class="text-toggle">Names</button>
+    </div>
+    <div id="patRow" class="capo" role="group" aria-labelledby="patLabel"></div>
+    <p id="patNote" class="legend"></p>
+    <div id="neckScroll" class="neck-scroll"></div>
+    <p class="legend dots-legend">
+      <span><i class="ndot root" style="width:12px;height:12px"></i> root</span>
+      <span><i class="ndot arp" style="width:12px;height:12px"></i> arpeggio</span>
+      <span><i class="ndot scale" style="width:12px;height:12px"></i> rest of the scale</span>
+    </p>
+    <p id="capoSoloNote" class="capo-note"></p>
+  </section>
 
   <h2>How to play them</h2>
   <div id="cards" class="cards"></div>
@@ -720,10 +870,87 @@ function bannerModel(model, capo) {
   }
   return { parts, action };
 }
+
+const LOW_TO_HIGH = [4, 9, 2, 7, 11, 4];
+
+function arpIntervals(quality) {
+  if (quality === "maj") return [0, 4, 7];
+  if (quality === "min") return [0, 3, 7];
+  return [0, 3, 6];
+}
+
+function spellInterval(rootName, rootPc, semitones) {
+  if (semitones === 0) return rootName;
+  const letters = "CDEFGAB";
+  const letterSteps = semitones === 3 || semitones === 4 ? 2 : 4;
+  const letter = letters[(letters.indexOf(rootName[0]) + letterSteps) % 7];
+  return spell(letter, (rootPc + semitones) % 12);
+}
+
+function diatonicPatterns(scalePcs) {
+  const patterns = [];
+  for (let start = 0; start < 7; start++) {
+    let degree = start;
+    let floor = 0;
+    const strings = [];
+    LOW_TO_HIGH.forEach((openPc) => {
+      const notes = [];
+      for (let step = 0; step < 3; step++) {
+        const pc = scalePcs[degree];
+        let fret = (pc - openPc + 12) % 12;
+        const min = step === 0 ? floor : notes[step - 1].fret + 1;
+        while (fret < min) fret += 12;
+        notes.push({ fret, pc, degree });
+        degree = (degree + 1) % 7;
+      }
+      strings.push(notes);
+      floor = Math.max(0, notes[0].fret - 1);
+    });
+    patterns.push(strings);
+  }
+  return patterns;
+}
+
+function neckNotes(scalePcs, enabled, arpPcs, rootPc) {
+  const patterns = diatonicPatterns(scalePcs);
+  const cells = Array.from({ length: 6 }, () => ({}));
+  const rank = { scale: 1, arp: 2, root: 3 };
+  function put(stringIndex, fret, pc, kind) {
+    const prev = cells[stringIndex][fret];
+    if (prev && rank[prev.kind] >= rank[kind]) return;
+    cells[stringIndex][fret] = { pc, kind };
+  }
+  patterns.forEach((strings, pattern) => {
+    if (!enabled[pattern]) return;
+    strings.forEach((notes, stringIndex) => {
+      const min = notes[0].fret;
+      const max = notes[notes.length - 1].fret;
+      notes.forEach((note) => {
+        const kind = note.pc === rootPc ? "root" : arpPcs.includes(note.pc) ? "arp" : "scale";
+        put(stringIndex, note.fret, note.pc, kind);
+      });
+      for (let fret = Math.max(0, min - 1); fret <= max + 1; fret++) {
+        const pc = (LOW_TO_HIGH[stringIndex] + fret) % 12;
+        if (pc === rootPc) put(stringIndex, fret, pc, "root");
+        else if (arpPcs.includes(pc)) put(stringIndex, fret, pc, "arp");
+      }
+    });
+  });
+  return { patterns, cells };
+}
 // @theory-end
 
 const STORE = "chordkey.v1";
-const state = { pc: 9, minor: true, capo: 0, string: "E", fret: 3 };
+const state = {
+  pc: 9,
+  minor: true,
+  capo: 0,
+  string: "E",
+  fret: 3,
+  arp: 0,
+  names: true,
+  patterns: [true, true, false, false, false, false, false],
+};
 
 const keySelect = document.getElementById("keySelect");
 const majorBtn = document.getElementById("majorBtn");
@@ -742,6 +969,13 @@ const stringE = document.getElementById("stringE");
 const stringA = document.getElementById("stringA");
 const fretSelect = document.getElementById("fretSelect");
 const lookupOut = document.getElementById("lookupText");
+const arpRow = document.getElementById("arpRow");
+const patRow = document.getElementById("patRow");
+const namesBtn = document.getElementById("namesBtn");
+const soloLead = document.getElementById("soloLead");
+const patNote = document.getElementById("patNote");
+const neckScroll = document.getElementById("neckScroll");
+const capoSoloNote = document.getElementById("capoSoloNote");
 
 function esc(value) {
   return String(value).replace(/[&<>"']/g, (ch) => ({
@@ -808,6 +1042,11 @@ function load() {
     if (Number.isInteger(saved.pc) && saved.pc >= 0 && saved.pc <= 11) state.pc = saved.pc;
     if (typeof saved.minor === "boolean") state.minor = saved.minor;
     if (Number.isInteger(saved.capo) && saved.capo >= 0 && saved.capo <= 7) state.capo = saved.capo;
+    if (saved.arp === "dom" || (Number.isInteger(saved.arp) && saved.arp >= 0 && saved.arp <= 6)) state.arp = saved.arp;
+    if (typeof saved.names === "boolean") state.names = saved.names;
+    if (Array.isArray(saved.patterns) && saved.patterns.length === 7 && saved.patterns.every((on) => typeof on === "boolean")) {
+      state.patterns = saved.patterns;
+    }
   } catch (error) {
     /* keep defaults */
   }
@@ -818,6 +1057,9 @@ function save() {
     pc: state.pc,
     minor: state.minor,
     capo: state.capo,
+    arp: state.arp,
+    names: state.names,
+    patterns: state.patterns,
   }));
 }
 
@@ -856,8 +1098,9 @@ function dominantChord(model) {
 function renderChart(model) {
   chart.innerHTML = model.chords.map((chord) => {
     const how = howShort(chord, state.capo);
+    const picked = state.arp === chord.index;
     const label = chord.roman + ", " + chord.full + ", " + (how.kind === "open" && state.capo ? "play " + how.text : how.text);
-    return `<button type="button" class="${how.kind}" data-target="chord-${chord.index}" aria-label="${esc(label)}">
+    return `<button type="button" class="${how.kind}${picked ? " picked" : ""}" data-arp="${chord.index}" aria-pressed="${picked}" aria-label="${esc(label)}">
       <span class="roman">${esc(chord.roman)}</span>
       <span class="sym">${esc(chord.symbol)}</span>
       <span class="how">${esc(how.text)}</span>
@@ -910,7 +1153,8 @@ function renderCards(model) {
     const how = howShort(chord, state.capo);
     const shape = findShape(chord.pc, chord.quality, state.capo);
     const picture = shape ? diagramFor(shape) : "";
-    return `<article class="chord ${how.kind}" id="chord-${chord.index}">
+    const soloOn = state.arp === chord.index ? " solo-on" : "";
+    return `<article class="chord ${how.kind}${soloOn}" id="chord-${chord.index}" data-arp="${chord.index}">
       <div class="roman">${esc(chord.roman)}</div>
       <div>
         <h3>${esc(chord.full)}</h3>
@@ -926,7 +1170,8 @@ function renderCards(model) {
     const detail = shape
       ? (state.capo === 0 ? "Open chord. " : "Play an open " + shape + ". ") + "Minor songs often make the 5 chord major."
       : "Minor songs often make the 5 chord major. " + powerSentence(dom, state.capo);
-    items.push(`<article class="chord ${shape ? "open" : "power"}" id="chord-dom">
+    const soloOn = state.arp === "dom" ? " solo-on" : "";
+    items.push(`<article class="chord ${shape ? "open" : "power"}${soloOn}" id="chord-dom" data-arp="dom">
       <div class="roman">V</div>
       <div>
         <p class="kicker">Often used</p>
@@ -996,6 +1241,95 @@ function renderShapes() {
     </div>`;
 }
 
+function scrollSolo() {
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  document.getElementById("solo").scrollIntoView({
+    behavior: reduce ? "auto" : "smooth",
+    block: "start",
+  });
+}
+
+function renderSolo(model) {
+  if (!model.minor && state.arp === "dom") state.arp = 4;
+  const arp = state.arp === "dom" ? dominantChord(model) : model.chords[state.arp];
+  const intervals = arpIntervals(arp.quality);
+  const arpPcs = intervals.map((semi) => (arp.pc + semi) % 12);
+  const spelled = intervals.map((semi) => spellInterval(arp.name, arp.pc, semi));
+  const names = {};
+  model.chords.forEach((chord) => { names[chord.pc] = chord.name; });
+  spelled.forEach((name, index) => { names[arpPcs[index]] = name; });
+
+  soloLead.textContent = arp.full + " is " + spelled.join(" · ") + ". Pink is the root. Gold finishes the arpeggio. Blue is the rest of the scale, only inside the patterns you have on.";
+
+  const arpButtons = model.chords.map((chord) => {
+    const on = state.arp === chord.index;
+    return `<button type="button" data-arp="${chord.index}" aria-pressed="${on}"><b>${esc(chord.symbol)}</b><small>${esc(chord.roman)}</small></button>`;
+  });
+  if (model.minor) {
+    const dom = dominantChord(model);
+    arpButtons.push(`<button type="button" data-arp="dom" aria-pressed="${state.arp === "dom"}"><b>${esc(dom.symbol)}</b><small>V</small></button>`);
+  }
+  arpRow.innerHTML = arpButtons.join("");
+  patRow.innerHTML = state.patterns.map((on, index) => {
+    return `<button type="button" data-pattern="${index}" aria-pressed="${on}" aria-label="Pattern ${index + 1}"><b>${index + 1}</b></button>`;
+  }).join("");
+  namesBtn.setAttribute("aria-pressed", String(state.names));
+  namesBtn.textContent = state.names ? "Names on" : "Names off";
+
+  const scalePcs = model.chords.map((chord) => chord.pc);
+  const { patterns, cells } = neckNotes(scalePcs, state.patterns, arpPcs, arp.pc);
+  const enabled = state.patterns.flatMap((on, index) => on ? [index] : []);
+  if (!enabled.length) {
+    patNote.textContent = "Turn a pattern on. Pattern 1 starts on the root, on the low E string. Each next one starts one scale note higher.";
+  } else {
+    const start = patterns[enabled[0]][0][0];
+    const startName = names[start.pc] || SHARP[start.pc];
+    const where = start.fret === 0 ? "the open low E string" : "fret " + start.fret + " on the low E string";
+    patNote.textContent = "Pattern " + (enabled[0] + 1) + " starts on " + startName + ", " + where + ". Each next pattern starts one scale note higher.";
+  }
+
+  let maxFret = 12;
+  cells.forEach((stringCells) => {
+    Object.keys(stringCells).forEach((fret) => { maxFret = Math.max(maxFret, Number(fret)); });
+  });
+  maxFret = Math.min(17, maxFret);
+  const labels = ["e", "B", "G", "D", "A", "E"];
+  const displayOrder = [5, 4, 3, 2, 1, 0];
+  const fretW = 44;
+  let html = `<div class="neck" style="--cols:${maxFret + 1}">`;
+  html += `<div class="fretnum"></div>`;
+  for (let fret = 0; fret <= maxFret; fret++) html += `<div class="fretnum">${fret === 0 ? "" : fret}</div>`;
+  displayOrder.forEach((stringIndex, row) => {
+    html += `<div class="sname">${labels[row]}</div>`;
+    for (let fret = 0; fret <= maxFret; fret++) {
+      const note = cells[stringIndex][fret];
+      let dot = "";
+      if (note) {
+        const text = state.names ? esc(names[note.pc] || SHARP[note.pc]) : "";
+        dot = `<span class="ndot ${note.kind}">${text}</span>`;
+      }
+      html += `<div class="cell${fret === 0 ? " open" : ""}">${dot}</div>`;
+    }
+  });
+  html += `<div class="inlay"></div>`;
+  for (let fret = 0; fret <= maxFret; fret++) {
+    const single = [3, 5, 7, 9, 15].includes(fret);
+    const marker = fret === 12
+      ? '<span class="pearl double"><i></i><i></i></span>'
+      : single ? '<span class="pearl"></span>' : "";
+    html += `<div class="inlay">${marker}</div>`;
+  }
+  html += `</div>`;
+  neckScroll.innerHTML = html;
+  if (enabled.length) {
+    const startFret = patterns[enabled[0]][0][0].fret;
+    neckScroll.scrollLeft = Math.max(0, (startFret - 1) * fretW);
+  }
+  capoSoloNote.textContent = state.capo > 0
+    ? "This neck is " + model.label + " with the capo off. The chord shapes above follow the capo."
+    : "";
+}
+
 function renderLookup() {
   stringE.setAttribute("aria-pressed", String(state.string === "E"));
   stringA.setAttribute("aria-pressed", String(state.string === "A"));
@@ -1014,6 +1348,7 @@ function render(options = {}) {
   renderChart(model);
   renderLegend();
   renderBanner(model);
+  renderSolo(model);
   renderCards(model);
   renderPower(model);
   renderLookup();
@@ -1067,13 +1402,35 @@ function init() {
     render({ focusCapo: true });
   });
   chart.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-target]");
+    const button = event.target.closest("[data-arp]");
     if (!button) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    document.getElementById(button.dataset.target)?.scrollIntoView({
-      behavior: reduce ? "auto" : "smooth",
-      block: "center",
-    });
+    state.arp = Number(button.dataset.arp);
+    render();
+    scrollSolo();
+  });
+  cards.addEventListener("click", (event) => {
+    const card = event.target.closest("[data-arp]");
+    if (!card) return;
+    state.arp = card.dataset.arp === "dom" ? "dom" : Number(card.dataset.arp);
+    render();
+    scrollSolo();
+  });
+  arpRow.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-arp]");
+    if (!button) return;
+    state.arp = button.dataset.arp === "dom" ? "dom" : Number(button.dataset.arp);
+    render();
+  });
+  patRow.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-pattern]");
+    if (!button) return;
+    const index = Number(button.dataset.pattern);
+    state.patterns[index] = !state.patterns[index];
+    render();
+  });
+  namesBtn.addEventListener("click", () => {
+    state.names = !state.names;
+    render();
   });
   stringE.addEventListener("click", () => {
     state.string = "E";
