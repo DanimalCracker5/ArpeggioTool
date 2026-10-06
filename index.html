@@ -371,10 +371,12 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 10px;
   margin-top: 12px;
 }
 .pat-head .field-label { margin: 0; }
+.pat-toggles { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 .text-toggle {
   min-height: 36px;
   padding: 0 14px;
@@ -395,7 +397,7 @@ h2 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(68px, 1fr));
 }
-#patRow { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+#patRow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
 #patRow button { min-width: 0; padding-left: 0; padding-right: 0; }
 .neck-scroll {
   margin-top: 10px;
@@ -557,7 +559,10 @@ footer {
     </div>
     <div class="pat-head">
       <span class="field-label" id="patLabel">Patterns</span>
-      <button type="button" id="namesBtn" class="text-toggle">Names</button>
+      <div class="pat-toggles">
+        <button type="button" id="pentBtn" class="text-toggle">Pentatonic</button>
+        <button type="button" id="namesBtn" class="text-toggle">Names</button>
+      </div>
     </div>
     <div id="patRow" class="capo" role="group" aria-labelledby="patLabel"></div>
     <p id="patNote" class="legend"></p>
@@ -565,7 +570,7 @@ footer {
     <p class="legend dots-legend">
       <span><i class="ndot root" style="width:12px;height:12px"></i> root</span>
       <span><i class="ndot arp" style="width:12px;height:12px"></i> arpeggio</span>
-      <span><i class="ndot scale" style="width:12px;height:12px"></i> rest of the scale</span>
+      <span><i class="ndot scale" style="width:12px;height:12px"></i> <span id="scaleLegend">rest of the scale</span></span>
     </p>
     <p id="capoSoloNote" class="capo-note"></p>
   </section>
@@ -887,32 +892,44 @@ function spellInterval(rootName, rootPc, semitones) {
   return spell(letter, (rootPc + semitones) % 12);
 }
 
-function diatonicPatterns(scalePcs) {
-  const patterns = [];
-  for (let start = 0; start < 7; start++) {
-    let degree = start;
-    let floor = 0;
-    const strings = [];
-    LOW_TO_HIGH.forEach((openPc) => {
-      const notes = [];
-      for (let step = 0; step < 3; step++) {
-        const pc = scalePcs[degree];
-        let fret = (pc - openPc + 12) % 12;
-        const min = step === 0 ? floor : notes[step - 1].fret + 1;
-        while (fret < min) fret += 12;
-        notes.push({ fret, pc, degree });
-        degree = (degree + 1) % 7;
-      }
-      strings.push(notes);
-      floor = Math.max(0, notes[0].fret - 1);
-    });
-    patterns.push(strings);
-  }
-  return patterns;
+// Five boxes, low string to high. Offsets are frets from the first-finger fret
+// on the low E string of pattern 1. Major uses the same shapes, set so the
+// root falls under the fourth finger instead of the first.
+const BOXES = [
+  [[0, 2, 3], [0, 2, 3], [0, 2], [-1, 0, 2], [0, 1, 3], [0, 2, 3]],
+  [[2, 3, 5], [2, 3, 5], [2, 4, 5], [2, 4, 5], [3, 5], [2, 3, 5]],
+  [[5, 7, 8], [5, 7], [4, 5, 7], [4, 5, 7], [5, 7, 8], [5, 7, 8]],
+  [[7, 8, 10], [7, 9, 10], [7, 9, 10], [7, 9], [7, 8, 10], [7, 8, 10]],
+  [[-2, 0], [-3, -2, 0], [-3, -2, 0], [-3, -1, 0], [-2, 0, 1], [-2, 0]],
+];
+
+function pentatonicIntervals(minor) {
+  return minor ? [0, 3, 5, 7, 10] : [0, 2, 4, 7, 9];
 }
 
-function neckNotes(scalePcs, enabled, arpPcs, rootPc) {
-  const patterns = diatonicPatterns(scalePcs);
+function patternAnchor(tonicPc, minor) {
+  const tonicFret = (tonicPc - LOW_TO_HIGH[0] + 12) % 12;
+  return minor ? tonicFret : tonicFret - 3;
+}
+
+function placeBox(offsets, anchor) {
+  const min = anchor + Math.min(...offsets.flat());
+  const shift = min < 0 ? 12 * Math.ceil(-min / 12) : 0;
+  return offsets.map((row, stringIndex) => row.map((off) => {
+    const fret = anchor + off + shift;
+    return { fret, pc: (LOW_TO_HIGH[stringIndex] + fret) % 12 };
+  }));
+}
+
+function neckNotes(tonicPc, minor, enabled, arpPcs, rootPc, pentatonic) {
+  const anchor = patternAnchor(tonicPc, minor);
+  const keep = pentatonic ? pentatonicIntervals(minor) : null;
+  const patterns = BOXES.map((box) => {
+    return placeBox(box, anchor).map((row) => row.filter((note) => {
+      if (!keep) return true;
+      return keep.includes((note.pc - tonicPc + 12) % 12);
+    }));
+  });
   const cells = Array.from({ length: 6 }, () => ({}));
   const rank = { scale: 1, arp: 2, root: 3 };
   function put(stringIndex, fret, pc, kind) {
@@ -923,17 +940,10 @@ function neckNotes(scalePcs, enabled, arpPcs, rootPc) {
   patterns.forEach((strings, pattern) => {
     if (!enabled[pattern]) return;
     strings.forEach((notes, stringIndex) => {
-      const min = notes[0].fret;
-      const max = notes[notes.length - 1].fret;
       notes.forEach((note) => {
         const kind = note.pc === rootPc ? "root" : arpPcs.includes(note.pc) ? "arp" : "scale";
         put(stringIndex, note.fret, note.pc, kind);
       });
-      for (let fret = Math.max(0, min - 1); fret <= max + 1; fret++) {
-        const pc = (LOW_TO_HIGH[stringIndex] + fret) % 12;
-        if (pc === rootPc) put(stringIndex, fret, pc, "root");
-        else if (arpPcs.includes(pc)) put(stringIndex, fret, pc, "arp");
-      }
     });
   });
   return { patterns, cells };
@@ -949,7 +959,8 @@ const state = {
   fret: 3,
   arp: 0,
   names: true,
-  patterns: [true, true, false, false, false, false, false],
+  pentatonic: false,
+  patterns: [true, true, false, false, false],
 };
 
 const keySelect = document.getElementById("keySelect");
@@ -972,6 +983,8 @@ const lookupOut = document.getElementById("lookupText");
 const arpRow = document.getElementById("arpRow");
 const patRow = document.getElementById("patRow");
 const namesBtn = document.getElementById("namesBtn");
+const pentBtn = document.getElementById("pentBtn");
+const scaleLegend = document.getElementById("scaleLegend");
 const soloLead = document.getElementById("soloLead");
 const patNote = document.getElementById("patNote");
 const neckScroll = document.getElementById("neckScroll");
@@ -1044,7 +1057,8 @@ function load() {
     if (Number.isInteger(saved.capo) && saved.capo >= 0 && saved.capo <= 7) state.capo = saved.capo;
     if (saved.arp === "dom" || (Number.isInteger(saved.arp) && saved.arp >= 0 && saved.arp <= 6)) state.arp = saved.arp;
     if (typeof saved.names === "boolean") state.names = saved.names;
-    if (Array.isArray(saved.patterns) && saved.patterns.length === 7 && saved.patterns.every((on) => typeof on === "boolean")) {
+    if (typeof saved.pentatonic === "boolean") state.pentatonic = saved.pentatonic;
+    if (Array.isArray(saved.patterns) && saved.patterns.length === 5 && saved.patterns.every((on) => typeof on === "boolean")) {
       state.patterns = saved.patterns;
     }
   } catch (error) {
@@ -1059,6 +1073,7 @@ function save() {
     capo: state.capo,
     arp: state.arp,
     names: state.names,
+    pentatonic: state.pentatonic,
     patterns: state.patterns,
   }));
 }
@@ -1259,7 +1274,9 @@ function renderSolo(model) {
   model.chords.forEach((chord) => { names[chord.pc] = chord.name; });
   spelled.forEach((name, index) => { names[arpPcs[index]] = name; });
 
-  soloLead.textContent = arp.full + " is " + spelled.join(" · ") + ". Pink is the root. Gold finishes the arpeggio. Blue is the rest of the scale, only inside the patterns you have on.";
+  const scaleWord = state.pentatonic ? "pentatonic" : "scale";
+  soloLead.textContent = arp.full + " is " + spelled.join(" · ") + ". Pink is the root. Gold finishes the arpeggio. Blue is the rest of the " + scaleWord + ", only inside the patterns you have on.";
+  scaleLegend.textContent = state.pentatonic ? "rest of the pentatonic" : "rest of the scale";
 
   const arpButtons = model.chords.map((chord) => {
     const on = state.arp === chord.index;
@@ -1275,24 +1292,30 @@ function renderSolo(model) {
   }).join("");
   namesBtn.setAttribute("aria-pressed", String(state.names));
   namesBtn.textContent = state.names ? "Names on" : "Names off";
+  pentBtn.setAttribute("aria-pressed", String(state.pentatonic));
+  pentBtn.textContent = state.pentatonic ? "Pentatonic on" : "Pentatonic off";
 
-  const scalePcs = model.chords.map((chord) => chord.pc);
-  const { patterns, cells } = neckNotes(scalePcs, state.patterns, arpPcs, arp.pc);
+  const { patterns, cells } = neckNotes(model.pc, model.minor, state.patterns, arpPcs, arp.pc, state.pentatonic);
   const enabled = state.patterns.flatMap((on, index) => on ? [index] : []);
+  const connect = "The five patterns sit one after another, and pattern 5 leads back to pattern 1.";
   if (!enabled.length) {
-    patNote.textContent = "Turn a pattern on. Pattern 1 starts on the root, on the low E string. Each next one starts one scale note higher.";
+    patNote.textContent = "Turn a pattern on. " + connect;
   } else {
     const start = patterns[enabled[0]][0][0];
-    const startName = names[start.pc] || SHARP[start.pc];
-    const where = start.fret === 0 ? "the open low E string" : "fret " + start.fret + " on the low E string";
-    patNote.textContent = "Pattern " + (enabled[0] + 1) + " starts on " + startName + ", " + where + ". Each next pattern starts one scale note higher.";
+    if (!start) {
+      patNote.textContent = "Pattern " + (enabled[0] + 1) + " is on. " + connect;
+    } else {
+      const startName = names[start.pc] || SHARP[start.pc];
+      const where = start.fret === 0 ? "the open low E string" : "fret " + start.fret + " on the low E string";
+      patNote.textContent = "Pattern " + (enabled[0] + 1) + " starts on " + startName + ", " + where + ". " + connect;
+    }
   }
 
   let maxFret = 12;
   cells.forEach((stringCells) => {
     Object.keys(stringCells).forEach((fret) => { maxFret = Math.max(maxFret, Number(fret)); });
   });
-  maxFret = Math.min(17, maxFret);
+  maxFret = Math.min(24, maxFret);
   const labels = ["e", "B", "G", "D", "A", "E"];
   const displayOrder = [5, 4, 3, 2, 1, 0];
   const fretW = 44;
@@ -1322,8 +1345,11 @@ function renderSolo(model) {
   html += `</div>`;
   neckScroll.innerHTML = html;
   if (enabled.length) {
-    const startFret = patterns[enabled[0]][0][0].fret;
-    neckScroll.scrollLeft = Math.max(0, (startFret - 1) * fretW);
+    const frets = patterns[enabled[0]].flat().map((note) => note.fret);
+    if (frets.length) {
+      const startFret = Math.min(...frets);
+      neckScroll.scrollLeft = Math.max(0, (startFret - 1) * fretW);
+    }
   }
   capoSoloNote.textContent = state.capo > 0
     ? "This neck is " + model.label + " with the capo off. The chord shapes above follow the capo."
@@ -1430,6 +1456,10 @@ function init() {
   });
   namesBtn.addEventListener("click", () => {
     state.names = !state.names;
+    render();
+  });
+  pentBtn.addEventListener("click", () => {
+    state.pentatonic = !state.pentatonic;
     render();
   });
   stringE.addEventListener("click", () => {
